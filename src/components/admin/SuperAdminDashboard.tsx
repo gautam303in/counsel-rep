@@ -6,8 +6,8 @@ import {
   CheckCircle2,
   ChevronRight,
   Copy,
-  DollarSign,
   Download,
+  Edit3,
   ExternalLink,
   HardDrive,
   IndianRupee,
@@ -22,6 +22,7 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Sliders,
   Sparkles,
   TrendingUp,
   UserCheck,
@@ -30,9 +31,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { LICENSE_PLANS } from '../../data/saasData';
 import { formatCurrency } from '../../services/financials';
-import { LicenseTier, Tenant, TenantFeatures, TenantStatus } from '../../types';
+import { LicensePlanDetails, LicenseTier, Tenant, TenantFeatures, TenantStatus } from '../../types';
 
 export const SuperAdminDashboard: React.FC = () => {
   const {
@@ -43,6 +43,8 @@ export const SuperAdminDashboard: React.FC = () => {
     addTenant,
     regenerateLicenseKey,
     toggleTenantFeature,
+    licensePlans,
+    updateLicensePlan,
     currentUser,
     theme,
     setCurrentView,
@@ -54,6 +56,10 @@ export const SuperAdminDashboard: React.FC = () => {
   const [showProvisionModal, setShowProvisionModal] = useState(false);
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
 
+  // Plan Tier Customizer State
+  const [editingPlan, setEditingPlan] = useState<LicensePlanDetails | null>(null);
+  const [showPlanEditModal, setShowPlanEditModal] = useState(false);
+
   // New Tenant Provisioning Form State
   const [newFirmName, setNewFirmName] = useState('');
   const [newDomain, setNewDomain] = useState('');
@@ -61,6 +67,7 @@ export const SuperAdminDashboard: React.FC = () => {
   const [newPlan, setNewPlan] = useState<LicenseTier>('ENTERPRISE');
   const [newMaxSeats, setNewMaxSeats] = useState(10);
   const [newMonthlyPriceINR, setNewMonthlyPriceINR] = useState(150000);
+  const [newStorageLimitGB, setNewStorageLimitGB] = useState(1000);
   const [newFeatures, setNewFeatures] = useState<TenantFeatures>({
     aiDrafting: true,
     legalHolds: true,
@@ -100,10 +107,11 @@ export const SuperAdminDashboard: React.FC = () => {
 
   const handlePlanChange = (planTier: LicenseTier) => {
     setNewPlan(planTier);
-    const plan = LICENSE_PLANS.find((p) => p.tier === planTier);
+    const plan = licensePlans.find((p) => p.tier === planTier);
     if (plan) {
       setNewMaxSeats(plan.maxSeatsIncluded);
       setNewMonthlyPriceINR(plan.monthlyPriceINR);
+      setNewStorageLimitGB(plan.storageGB);
       if (planTier === 'STARTER') {
         setNewFeatures({
           aiDrafting: false,
@@ -150,8 +158,6 @@ export const SuperAdminDashboard: React.FC = () => {
     const rand2 = Math.floor(1000 + Math.random() * 9000);
     const licenseKey = `CR-${prefix}-2026-${rand1}-${rand2}`;
 
-    const planDetails = LICENSE_PLANS.find((p) => p.tier === newPlan);
-
     addTenant({
       name: newFirmName,
       domain:
@@ -164,7 +170,7 @@ export const SuperAdminDashboard: React.FC = () => {
       seatsAllocated: 1,
       maxSeats: newMaxSeats,
       storageUsedGB: 0.1,
-      storageLimitGB: planDetails?.storageGB || 500,
+      storageLimitGB: newStorageLimitGB,
       monthlyPriceINR: newMonthlyPriceINR,
       renewDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
         .toISOString()
@@ -183,7 +189,7 @@ export const SuperAdminDashboard: React.FC = () => {
   return (
     <div
       className={`flex-1 overflow-y-auto p-6 md:p-8 space-y-6 font-sans transition-colors duration-200 ${
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#fafcff] text-slate-800'
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
       {/* Top Header */}
@@ -334,21 +340,38 @@ export const SuperAdminDashboard: React.FC = () => {
 
       {/* SaaS Licensing Plans Strip */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2
-            className={`text-xs font-bold uppercase tracking-wider ${
-              isDark ? 'text-slate-400' : 'text-slate-600'
-            }`}
-          >
-            SaaS Subscription Tiers & Feature Matrix
-          </h2>
-          <span className="text-xs text-blue-400 font-semibold font-num">
-            All prices in Indian Rupees (₹ INR)
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <h2
+              className={`text-xs font-bold uppercase tracking-wider ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
+              SaaS Subscription Tiers & Feature Matrix
+            </h2>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">
+              Configurable Catalog
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setEditingPlan(licensePlans[0]);
+                setShowPlanEditModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 transition-all cursor-pointer"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Customise Tiers & Pricing</span>
+            </button>
+            <span className="text-xs text-blue-400 font-semibold font-num hidden md:inline">
+              All prices in Indian Rupees (₹ INR)
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {LICENSE_PLANS.map((plan) => (
+          {licensePlans.map((plan) => (
             <div
               key={plan.tier}
               className={`p-5 rounded-2xl border transition-all relative flex flex-col justify-between ${
@@ -361,34 +384,51 @@ export const SuperAdminDashboard: React.FC = () => {
                   : 'border-slate-200 bg-white'
               }`}
             >
-              {plan.popular && (
-                <span className="absolute -top-2.5 right-4 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Popular
-                </span>
-              )}
-              <div className="space-y-2">
+              <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
-                    {plan.tier}
-                  </span>
-                  <span className="text-[11px] font-num text-slate-400">
-                    {plan.maxSeatsIncluded} Seats
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                      {plan.tier}
+                    </span>
+                    {plan.popular && (
+                      <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                        Popular
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditingPlan(plan);
+                      setShowPlanEditModal(true);
+                    }}
+                    title="Configure this tier's fees, users, and storage"
+                    className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <h3
-                  className={`text-base font-bold ${
-                    isDark ? 'text-white' : 'text-slate-900'
-                  }`}
-                >
-                  {plan.name}
-                </h3>
-                <div className="text-lg font-bold font-num text-emerald-400">
-                  {formatCurrency(plan.monthlyPriceINR)}
-                  <span className="text-[11px] text-slate-400 font-normal"> / mo</span>
+
+                <div className="space-y-2 mt-2">
+                  <div className="flex items-center justify-between">
+                    <h3
+                      className={`text-base font-bold ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}
+                    >
+                      {plan.name}
+                    </h3>
+                    <span className="text-[11px] font-num text-slate-400 font-semibold">
+                      {plan.maxSeatsIncluded} Seats
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold font-num text-emerald-400">
+                    {formatCurrency(plan.monthlyPriceINR)}
+                    <span className="text-[11px] text-slate-400 font-normal"> / mo</span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {plan.description}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  {plan.description}
-                </p>
               </div>
 
               <div className="pt-3 border-t border-slate-800/80 mt-3 text-[11px] text-slate-400 space-y-1">
@@ -477,6 +517,7 @@ export const SuperAdminDashboard: React.FC = () => {
                   <th className="py-3 px-4">Firm / Tenant</th>
                   <th className="py-3 px-4">License Tier</th>
                   <th className="py-3 px-4">Seats Allocated</th>
+                  <th className="py-3 px-4">Storage Quota</th>
                   <th className="py-3 px-4">License Key</th>
                   <th className="py-3 px-4">Monthly Rate</th>
                   <th className="py-3 px-4">Status</th>
@@ -565,6 +606,31 @@ export const SuperAdminDashboard: React.FC = () => {
                               width: `${Math.min(
                                 100,
                                 (t.seatsAllocated / t.maxSeats) * 100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </td>
+
+                      {/* Storage Quota */}
+                      <td className="py-3.5 px-4">
+                        <div>
+                          <span className="font-num font-bold text-slate-200">
+                            {t.storageUsedGB}
+                          </span>
+                          <span className="text-slate-400 font-num"> / {t.storageLimitGB} GB</span>
+                        </div>
+                        <div className="w-24 bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              (t.storageUsedGB / t.storageLimitGB) >= 0.85
+                                ? 'bg-amber-500'
+                                : 'bg-emerald-500'
+                            }`}
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                (t.storageUsedGB / t.storageLimitGB) * 100
                               )}%`,
                             }}
                           />
@@ -680,7 +746,7 @@ export const SuperAdminDashboard: React.FC = () => {
             {/* Body */}
             <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
               {/* Plan & License Key Row */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                     Subscription Tier
@@ -689,22 +755,16 @@ export const SuperAdminDashboard: React.FC = () => {
                     value={selectedTenant.plan}
                     onChange={(e) => {
                       const newTier = e.target.value as LicenseTier;
-                      const plan = LICENSE_PLANS.find((p) => p.tier === newTier);
-                      updateTenant(selectedTenant.id, {
+                      const plan = licensePlans.find((p) => p.tier === newTier);
+                      const updates = {
                         plan: newTier,
                         monthlyPriceINR: plan?.monthlyPriceINR || selectedTenant.monthlyPriceINR,
                         maxSeats: plan?.maxSeatsIncluded || selectedTenant.maxSeats,
-                      });
+                        storageLimitGB: plan?.storageGB || selectedTenant.storageLimitGB,
+                      };
+                      updateTenant(selectedTenant.id, updates);
                       setSelectedTenant((prev) =>
-                        prev
-                          ? {
-                              ...prev,
-                              plan: newTier,
-                              monthlyPriceINR:
-                                plan?.monthlyPriceINR || prev.monthlyPriceINR,
-                              maxSeats: plan?.maxSeatsIncluded || prev.maxSeats,
-                            }
-                          : null
+                        prev ? { ...prev, ...updates } : null
                       );
                     }}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none border ${
@@ -713,16 +773,46 @@ export const SuperAdminDashboard: React.FC = () => {
                         : 'bg-slate-50 border-slate-200 text-slate-800'
                     }`}
                   >
-                    <option value="STARTER">STARTER (₹25,000/mo)</option>
-                    <option value="PROFESSIONAL">PROFESSIONAL (₹75,000/mo)</option>
-                    <option value="ENTERPRISE">ENTERPRISE (₹1,50,000/mo)</option>
-                    <option value="SOVEREIGN">SOVEREIGN (₹3,50,000/mo)</option>
+                    {licensePlans.map((p) => (
+                      <option key={p.tier} value={p.tier}>
+                        {p.name} ({formatCurrency(p.monthlyPriceINR)}/mo)
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Max Seat Quota
+                    Custom Monthly Subscription Fee (₹ INR)
+                  </label>
+                  <input
+                    type="number"
+                    step="1000"
+                    value={selectedTenant.monthlyPriceINR}
+                    onChange={(e) => {
+                      const price = parseFloat(e.target.value) || 0;
+                      updateTenant(selectedTenant.id, { monthlyPriceINR: price });
+                      setSelectedTenant((prev) =>
+                        prev ? { ...prev, monthlyPriceINR: price } : null
+                      );
+                    }}
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800 text-emerald-400'
+                        : 'bg-slate-50 border-slate-200 text-emerald-600'
+                    }`}
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Active Rate: {formatCurrency(selectedTenant.monthlyPriceINR)} / mo
+                  </span>
+                </div>
+              </div>
+
+              {/* User Seats & Storage Quotas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Max User Seats Quota
                   </label>
                   <input
                     type="number"
@@ -740,7 +830,34 @@ export const SuperAdminDashboard: React.FC = () => {
                     }`}
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
-                    Currently allocated: {selectedTenant.seatsAllocated} seats
+                    Allocated: {selectedTenant.seatsAllocated} of {selectedTenant.maxSeats} seats
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Storage Quota Limit (GB)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="25"
+                    value={selectedTenant.storageLimitGB}
+                    onChange={(e) => {
+                      const storage = parseInt(e.target.value) || 10;
+                      updateTenant(selectedTenant.id, { storageLimitGB: storage });
+                      setSelectedTenant((prev) =>
+                        prev ? { ...prev, storageLimitGB: storage } : null
+                      );
+                    }}
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800 text-slate-200'
+                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                    }`}
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Vault Utilization: {selectedTenant.storageUsedGB} GB of {selectedTenant.storageLimitGB} GB
                   </span>
                 </div>
               </div>
@@ -927,15 +1044,16 @@ export const SuperAdminDashboard: React.FC = () => {
                     onChange={(e) => handlePlanChange(e.target.value as LicenseTier)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
                   >
-                    <option value="STARTER">STARTER</option>
-                    <option value="PROFESSIONAL">PROFESSIONAL</option>
-                    <option value="ENTERPRISE">ENTERPRISE</option>
-                    <option value="SOVEREIGN">SOVEREIGN</option>
+                    {licensePlans.map((p) => (
+                      <option key={p.tier} value={p.tier}>
+                        {p.name} ({p.tier})
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Max Seat Quota
+                    Max User Seats Quota
                   </label>
                   <input
                     type="number"
@@ -947,20 +1065,38 @@ export const SuperAdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                  Monthly Subscription Rate (₹ INR)
-                </label>
-                <input
-                  type="number"
-                  step="5000"
-                  value={newMonthlyPriceINR}
-                  onChange={(e) => setNewMonthlyPriceINR(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none focus:border-blue-500"
-                />
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  Formatted: {formatCurrency(newMonthlyPriceINR)} / month
-                </span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Monthly Subscription Rate (₹ INR)
+                  </label>
+                  <input
+                    type="number"
+                    step="5000"
+                    value={newMonthlyPriceINR}
+                    onChange={(e) => setNewMonthlyPriceINR(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none focus:border-blue-500"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Formatted: {formatCurrency(newMonthlyPriceINR)} / month
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Storage Quota Limit (GB)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    step="50"
+                    value={newStorageLimitGB}
+                    onChange={(e) => setNewStorageLimitGB(parseInt(e.target.value) || 100)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-num font-bold text-slate-200 focus:outline-none focus:border-blue-500"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Capacity: {newStorageLimitGB} GB Encrypted Vault
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
@@ -973,9 +1109,220 @@ export const SuperAdminDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-md"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer"
                 >
                   Provision Law Firm & Issue License Key
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Plan Tier Customization Modal */}
+      {showPlanEditModal && editingPlan && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className={`rounded-3xl shadow-2xl border w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 ${
+              isDark
+                ? 'bg-slate-900 border-slate-800 text-slate-100'
+                : 'bg-white border-slate-200 text-slate-800'
+            }`}
+          >
+            <div
+              className={`p-6 border-b flex items-center justify-between ${
+                isDark ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-blue-400" />
+                <div>
+                  <h3 className="text-base font-bold">
+                    Customise SaaS Plan: {editingPlan.name} ({editingPlan.tier})
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Update base platform pricing, included user seats, and storage quotas
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPlanEditModal(false)}
+                className="p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateLicensePlan(editingPlan.tier, editingPlan);
+                setShowPlanEditModal(false);
+              }}
+              className="p-6 space-y-4 max-h-[75vh] overflow-y-auto"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Plan Display Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingPlan.name}
+                    onChange={(e) =>
+                      setEditingPlan({ ...editingPlan, name: e.target.value })
+                    }
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800 text-slate-200'
+                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Tier Identifier
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    value={editingPlan.tier}
+                    className="w-full rounded-xl px-3 py-2 text-xs font-mono font-bold bg-slate-800/50 text-slate-400 border border-slate-700/50 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Monthly Subscription Fee (₹ INR)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="5000"
+                    value={editingPlan.monthlyPriceINR}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        monthlyPriceINR: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Formatted: {formatCurrency(editingPlan.monthlyPriceINR)} / mo
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Annual Subscription Fee (₹ INR)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="10000"
+                    value={editingPlan.annualPriceINR}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        annualPriceINR: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Formatted: {formatCurrency(editingPlan.annualPriceINR)} / yr
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Base User Seats Included
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editingPlan.maxSeatsIncluded}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        maxSeatsIncluded: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800 text-slate-200'
+                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    Base Storage Included (GB)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    step="50"
+                    value={editingPlan.storageGB}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        storageGB: parseInt(e.target.value) || 50,
+                      })
+                    }
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800 text-slate-200'
+                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  Plan Description & Value Proposition
+                </label>
+                <textarea
+                  rows={3}
+                  value={editingPlan.description}
+                  onChange={(e) =>
+                    setEditingPlan({ ...editingPlan, description: e.target.value })
+                  }
+                  className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none border ${
+                    isDark
+                      ? 'bg-slate-950 border-slate-800 text-slate-200'
+                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`}
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowPlanEditModal(false)}
+                  className="px-4 py-2 text-xs text-slate-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer"
+                >
+                  Save Tier Customizations
                 </button>
               </div>
             </form>

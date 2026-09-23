@@ -7,7 +7,6 @@ import {
   Calendar,
   Check,
   CheckCircle2,
-  DollarSign,
   FileText,
   FolderLock,
   Globe,
@@ -27,6 +26,7 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Sliders,
   Sun,
   Trash2,
   UserCheck,
@@ -45,6 +45,7 @@ import {
 } from '../../services/rbac';
 import {
   BoundedDomain,
+  LicenseTier,
   PermissionAction,
   StandardRole,
   User,
@@ -60,6 +61,8 @@ export const RbacManagementView: React.FC = () => {
     matters,
     ethicalWalls,
     currentTenant,
+    updateTenant,
+    licensePlans,
     addFirmUser,
     updateFirmUser,
     toggleUserStatus,
@@ -83,6 +86,19 @@ export const RbacManagementView: React.FC = () => {
   const [newDept, setNewDept] = useState('Commercial Litigation');
   const [newBar, setNewBar] = useState('');
   const [quotaError, setQuotaError] = useState('');
+
+  // Self-Service Tenant Subscription & Quota Customizer Modal
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [customPlan, setCustomPlan] = useState<LicenseTier>(currentTenant.plan);
+  const [customSeats, setCustomSeats] = useState<number>(currentTenant.maxSeats);
+  const [customStorageGB, setCustomStorageGB] = useState<number>(currentTenant.storageLimitGB);
+
+  const handleOpenSubscriptionModal = () => {
+    setCustomPlan(currentTenant.plan);
+    setCustomSeats(currentTenant.maxSeats);
+    setCustomStorageGB(currentTenant.storageLimitGB);
+    setShowSubscriptionModal(true);
+  };
 
   // Live Policy Simulator state
   const [simUserId, setSimUserId] = useState<string>(users[3]?.id || users[0].id);
@@ -180,7 +196,7 @@ export const RbacManagementView: React.FC = () => {
   return (
     <div
       className={`flex-1 overflow-y-auto p-6 md:p-8 space-y-6 font-sans transition-colors duration-200 ${
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#fafcff] text-slate-800'
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
       {/* Top Header & Tenant Admin Banner */}
@@ -252,57 +268,99 @@ export const RbacManagementView: React.FC = () => {
 
       {/* Tenant Licensing Status Banner */}
       <div
-        className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs ${
+        className={`p-5 rounded-2xl border flex flex-col xl:flex-row xl:items-center justify-between gap-5 shadow-xs ${
           isDark
             ? 'bg-slate-900 border-slate-800 text-slate-200'
             : 'bg-white border-slate-200 text-slate-800'
         }`}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-950 text-blue-400 border border-blue-800/60 flex items-center justify-center font-bold">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-950 text-blue-400 border border-blue-800/60 flex items-center justify-center font-bold shrink-0">
             <Shield className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-100 flex items-center gap-2">
-              <span>Tenant Plan:</span>
-              <span className="bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full border border-blue-800/60 font-mono text-[10px]">
-                {currentTenant.plan}
+            <div className="text-xs font-bold text-slate-100 flex items-center gap-2 flex-wrap">
+              <span>SaaS Subscription:</span>
+              <span className="bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full border border-blue-800/60 font-mono text-[10px] uppercase font-bold">
+                {currentTenant.plan} Tier
               </span>
-              <span className="text-emerald-400 text-[10px] bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/60">
+              <span className="text-emerald-400 font-num font-semibold text-xs">
+                {formatCurrency(currentTenant.monthlyPriceINR)} / mo
+              </span>
+              <span className="text-emerald-400 text-[10px] bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/60 font-semibold">
                 ACTIVE
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+            <div className="text-[11px] text-slate-400 mt-1 font-mono">
               License Key: {currentTenant.licenseKey} · Renews: {currentTenant.renewDate}
             </div>
           </div>
         </div>
 
-        {/* Seat Quota Meter */}
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Licensed Seat Quota
+        {/* Meters and Customizer Button */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          {/* Seat Quota Meter */}
+          <div className="space-y-1 min-w-[140px]">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                Seats
+              </span>
+              <span className="font-bold font-num text-slate-100">
+                {currentTenant.seatsAllocated}/{currentTenant.maxSeats}
+              </span>
             </div>
-            <div className="text-sm font-bold font-num text-slate-100">
-              {currentTenant.seatsAllocated} of {currentTenant.maxSeats} Seats Used
+            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  currentTenant.seatsAllocated >= currentTenant.maxSeats
+                    ? 'bg-amber-500'
+                    : 'bg-blue-500'
+                }`}
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (currentTenant.seatsAllocated / currentTenant.maxSeats) * 100
+                  )}%`,
+                }}
+              />
             </div>
           </div>
-          <div className="w-32 bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${
-                currentTenant.seatsAllocated >= currentTenant.maxSeats
-                  ? 'bg-amber-500'
-                  : 'bg-blue-500'
-              }`}
-              style={{
-                width: `${Math.min(
-                  100,
-                  (currentTenant.seatsAllocated / currentTenant.maxSeats) * 100
-                )}%`,
-              }}
-            />
+
+          {/* Cloud Storage Quota Meter */}
+          <div className="space-y-1 min-w-[140px]">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                Storage
+              </span>
+              <span className="font-bold font-num text-slate-100">
+                {currentTenant.storageUsedGB}/{currentTenant.storageLimitGB} GB
+              </span>
+            </div>
+            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  (currentTenant.storageUsedGB / currentTenant.storageLimitGB) >= 0.85
+                    ? 'bg-amber-500'
+                    : 'bg-emerald-500'
+                }`}
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (currentTenant.storageUsedGB / currentTenant.storageLimitGB) * 100
+                  )}%`,
+                }}
+              />
+            </div>
           </div>
+
+          {/* Customise Subscription Button */}
+          <button
+            onClick={handleOpenSubscriptionModal}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
+          >
+            <Sliders className="w-3.5 h-3.5 text-blue-400" />
+            <span>Customise Plan & Quotas</span>
+          </button>
         </div>
       </div>
 
@@ -922,6 +980,255 @@ export const RbacManagementView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Self-Service Tenant Subscription & Quota Customizer Modal */}
+      {showSubscriptionModal && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className={`rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 ${
+              isDark
+                ? 'bg-slate-900 border-slate-800 text-slate-100'
+                : 'bg-white border-slate-200 text-slate-800'
+            }`}
+          >
+            {/* Header */}
+            <div
+              className={`p-6 border-b flex items-center justify-between ${
+                isDark ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Customise Firm Subscription & Quotas
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Adjust license tier, add team seat licenses, and expand vault storage
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSubscriptionModal(false)}
+                className="p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* Step 1: Select License Tier */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Select Base License Tier
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {licensePlans.map((p) => {
+                    const isSelected = customPlan === p.tier;
+                    return (
+                      <div
+                        key={p.tier}
+                        onClick={() => {
+                          setCustomPlan(p.tier);
+                          setCustomSeats((prev) =>
+                            Math.max(prev, p.maxSeatsIncluded, currentTenant.seatsAllocated)
+                          );
+                          setCustomStorageGB((prev) =>
+                            Math.max(prev, p.storageGB, Math.ceil(currentTenant.storageUsedGB))
+                          );
+                        }}
+                        className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-blue-600/15 border-blue-500 text-white shadow-xs ring-1 ring-blue-500'
+                            : isDark
+                            ? 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                              {p.tier}
+                            </span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-blue-400" />}
+                          </div>
+                          <div className="font-bold text-xs mt-1">{p.name}</div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-800/60 text-[10px] space-y-0.5">
+                          <div className="font-num font-semibold text-emerald-400">
+                            {formatCurrency(p.monthlyPriceINR)}/mo
+                          </div>
+                          <div className="text-slate-400">
+                            {p.maxSeatsIncluded} seats · {p.storageGB} GB
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Step 2: Custom Seat & Storage Sliders */}
+              {(() => {
+                const planObj = licensePlans.find((p) => p.tier === customPlan) || licensePlans[0];
+                const extraSeats = Math.max(0, customSeats - planObj.maxSeatsIncluded);
+                const extraSeatRate = Math.round((planObj.monthlyPriceINR / planObj.maxSeatsIncluded) * 0.7);
+                const extraSeatsCost = extraSeats * extraSeatRate;
+                const extraStorage = Math.max(0, customStorageGB - planObj.storageGB);
+                const extraStorageCost = Math.ceil(extraStorage / 50) * 1500;
+                const totalMonthlyCalculated = planObj.monthlyPriceINR + extraSeatsCost + extraStorageCost;
+
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* User Seats Customizer */}
+                      <div
+                        className={`p-4 rounded-2xl border ${
+                          isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                            User Seat Quota
+                          </label>
+                          <span className="text-xs font-bold font-num text-blue-400">
+                            {customSeats} Seats
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={Math.max(1, currentTenant.seatsAllocated)}
+                          max={50}
+                          value={customSeats}
+                          onChange={(e) => setCustomSeats(parseInt(e.target.value) || 1)}
+                          className="w-full accent-blue-600 cursor-pointer"
+                        />
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                          <span>Active users: {currentTenant.seatsAllocated}</span>
+                          <span>Base covers: {planObj.maxSeatsIncluded}</span>
+                        </div>
+                        {extraSeats > 0 && (
+                          <div className="text-[10px] text-amber-400 mt-1 font-num">
+                            + {extraSeats} add-on seat{extraSeats > 1 ? 's' : ''} ({formatCurrency(extraSeatsCost)}/mo)
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Storage Quota Customizer */}
+                      <div
+                        className={`p-4 rounded-2xl border ${
+                          isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                            Vault Storage Quota
+                          </label>
+                          <span className="text-xs font-bold font-num text-blue-400">
+                            {customStorageGB} GB
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={Math.max(50, Math.ceil(currentTenant.storageUsedGB))}
+                          max={5000}
+                          step={50}
+                          value={customStorageGB}
+                          onChange={(e) => setCustomStorageGB(parseInt(e.target.value) || 50)}
+                          className="w-full accent-blue-600 cursor-pointer"
+                        />
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                          <span>Vault used: {currentTenant.storageUsedGB} GB</span>
+                          <span>Base covers: {planObj.storageGB} GB</span>
+                        </div>
+                        {extraStorage > 0 && (
+                          <div className="text-[10px] text-amber-400 mt-1 font-num">
+                            + {extraStorage} GB extra storage ({formatCurrency(extraStorageCost)}/mo)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 3: Real-Time Pricing Summary */}
+                    <div
+                      className={`p-4 rounded-2xl border ${
+                        isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Updated Subscription Fee Breakdown
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">
+                            {planObj.name} Base Rate ({planObj.maxSeatsIncluded} seats · {planObj.storageGB} GB)
+                          </span>
+                          <span className="font-num font-semibold text-slate-200">
+                            {formatCurrency(planObj.monthlyPriceINR)}
+                          </span>
+                        </div>
+                        {extraSeats > 0 && (
+                          <div className="flex items-center justify-between text-amber-400">
+                            <span>
+                              Additional Seats Quota (+{extraSeats} seats @ {formatCurrency(extraSeatRate)}/seat)
+                            </span>
+                            <span className="font-num font-semibold">
+                              +{formatCurrency(extraSeatsCost)}
+                            </span>
+                          </div>
+                        )}
+                        {extraStorage > 0 && (
+                          <div className="flex items-center justify-between text-amber-400">
+                            <span>Additional Vault Storage (+{extraStorage} GB)</span>
+                            <span className="font-num font-semibold">
+                              +{formatCurrency(extraStorageCost)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-sm font-bold mt-2">
+                          <span className="text-white">Total Monthly Subscription</span>
+                          <span className="font-num text-emerald-400">
+                            {formatCurrency(totalMonthlyCalculated)} / month
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setShowSubscriptionModal(false)}
+                        className="px-4 py-2 text-xs text-slate-400 hover:text-white cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateTenant(currentTenant.id, {
+                            plan: customPlan,
+                            maxSeats: customSeats,
+                            storageLimitGB: customStorageGB,
+                            monthlyPriceINR: totalMonthlyCalculated,
+                          });
+                          setShowSubscriptionModal(false);
+                        }}
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer transition-all active:scale-98"
+                      >
+                        Confirm & Apply Subscription Quotas
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}

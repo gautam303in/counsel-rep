@@ -47,7 +47,7 @@ export const TopBar: React.FC = () => {
       className={`h-16 border-b px-4 md:px-6 flex items-center justify-between z-30 shrink-0 select-none font-sans transition-colors duration-200 ${
         isDark
           ? 'bg-slate-900 border-slate-800 text-slate-100'
-          : 'bg-[#FFFFF0] border-amber-200/70 text-slate-800'
+          : 'bg-white border-slate-200/80 text-slate-800'
       }`}
     >
       {/* Left Area: Breadcrumb Button (with all sidebar options) + Search Input + Tenant Badge */}
@@ -68,7 +68,7 @@ export const TopBar: React.FC = () => {
           className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border transition-colors shrink-0 ${
             isDark
               ? 'bg-slate-950 border-slate-800 text-slate-300 hover:border-blue-500/50'
-              : 'bg-[#FFFDF7] border-amber-200/80 text-slate-700 hover:border-blue-400 shadow-xs'
+              : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 shadow-xs'
           }`}
         >
           <Building className="w-3.5 h-3.5 text-blue-500 shrink-0" />
@@ -84,12 +84,14 @@ export const TopBar: React.FC = () => {
           className={`hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border text-xs transition-all w-full max-w-xs shadow-inner ${
             isDark
               ? 'bg-slate-950/80 hover:bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-              : 'bg-[#FFFDF7] hover:bg-amber-50/60 border-amber-200/70 text-slate-600 hover:text-slate-800'
+              : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-800'
           }`}
         >
           <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <span className="truncate font-normal">Search Counsel Repos...</span>
-          <span className="text-[10px] text-slate-500 font-mono ml-auto bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-700/50 shadow-xs">
+          <span className={`text-[10px] font-mono ml-auto px-1.5 py-0.5 rounded border shadow-xs ${
+            isDark ? 'bg-slate-800/60 text-slate-500 border-slate-700/50' : 'bg-white text-slate-500 border-slate-200'
+          }`}>
             ⌘K
           </span>
         </button>

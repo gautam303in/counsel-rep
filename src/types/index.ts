@@ -454,7 +454,7 @@ export interface Matter {
   closeDate?: string;
   feeArrangement: FeeArrangement | string;
   budgetCap?: number;
-  evergreenTrustMinimum: number; // Evergreen retainer threshold (e.g. $10,000)
+  evergreenTrustMinimum: number; // Evergreen retainer threshold (e.g. ₹10,000)
   hasActiveHold: boolean;
   billingModel?: string;
 }

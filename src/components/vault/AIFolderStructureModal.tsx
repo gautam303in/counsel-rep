@@ -153,13 +153,13 @@ export const AIFolderStructureModal: React.FC<AIFolderStructureModalProps> = ({
         className={`w-full max-w-5xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all ${
           isDark
             ? 'bg-slate-900 border-slate-700/80 text-slate-100 shadow-slate-950/90'
-            : 'bg-[#FFFFF0] border-amber-200/80 text-slate-900 shadow-xl'
+            : 'bg-white border-slate-200 text-slate-900 shadow-2xl'
         }`}
       >
         {/* Header */}
         <div
           className={`p-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 ${
-            isDark ? 'border-slate-800 bg-slate-900/60' : 'border-amber-200/60 bg-[#FFFDF7]'
+            isDark ? 'border-slate-800 bg-slate-900/60' : 'border-slate-200 bg-slate-50/80'
           }`}
         >
           <div className="flex items-start gap-3">
@@ -238,7 +238,7 @@ export const AIFolderStructureModal: React.FC<AIFolderStructureModalProps> = ({
         {proposal && (
           <div
             className={`px-6 py-4 border-b flex flex-wrap items-center justify-between gap-4 shrink-0 transition-colors ${
-              isDark ? 'border-slate-800 bg-slate-950/40' : 'border-amber-200/60 bg-[#FFFDF7]'
+              isDark ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-slate-50/80'
             }`}
           >
             {/* Health Meter */}
@@ -450,7 +450,7 @@ export const AIFolderStructureModal: React.FC<AIFolderStructureModalProps> = ({
                                     className={`p-3 rounded-xl border space-y-2 ${
                                       isDark
                                         ? 'bg-slate-900/70 border-slate-800/80'
-                                        : 'bg-[#FFFDF7] border-amber-200/60'
+                                        : 'bg-slate-50 border-slate-200'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between">
@@ -553,7 +553,7 @@ export const AIFolderStructureModal: React.FC<AIFolderStructureModalProps> = ({
                             className={`border-b text-[10px] uppercase font-bold tracking-wider ${
                               isDark
                                 ? 'bg-slate-950/80 border-slate-800 text-slate-400'
-                                : 'bg-[#FFFDF7] border-amber-200 text-slate-600'
+                                : 'bg-slate-50 border-slate-200 text-slate-600'
                             }`}
                           >
                             <th className="p-3 w-10 text-center">
@@ -716,7 +716,7 @@ export const AIFolderStructureModal: React.FC<AIFolderStructureModalProps> = ({
         {/* Footer Actions */}
         <div
           className={`p-5 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 ${
-            isDark ? 'border-slate-800 bg-slate-900/60' : 'border-amber-200/60 bg-[#FFFDF7]'
+            isDark ? 'border-slate-800 bg-slate-900/60' : 'border-slate-200 bg-slate-50/80'
           }`}
         >
           <div className="flex items-center gap-2 text-xs text-slate-400">

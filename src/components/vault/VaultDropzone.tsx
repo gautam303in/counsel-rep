@@ -1,4 +1,4 @@
-import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import React, { useState, useEffect, useRef, DragEvent, ChangeEvent } from 'react';
 import {
   UploadCloud,
   FolderUp,
@@ -20,6 +20,7 @@ import { VaultDocument } from '../../types';
 
 interface VaultDropzoneProps {
   currentFolder?: string;
+  targetMatterId?: string;
   onUploadStart?: (tasks: UploadTask[]) => void;
   onUploadProgress?: (taskId: string, progress: number) => void;
   onUploadComplete?: (task: UploadTask, doc: VaultDocument) => void;
@@ -28,6 +29,7 @@ interface VaultDropzoneProps {
 
 export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
   currentFolder = 'Discovery',
+  targetMatterId,
   onUploadStart,
   onUploadProgress,
   onUploadComplete,
@@ -40,12 +42,24 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [draggedItemCount, setDraggedItemCount] = useState<number>(0);
   const [selectedMatterId, setSelectedMatterId] = useState<string>(
-    activeMatterId || matters[0]?.id || ''
+    targetMatterId || activeMatterId || matters[0]?.id || ''
   );
   const [targetCategory, setTargetCategory] = useState<string>(
     currentFolder === 'ALL' ? 'Discovery' : currentFolder
   );
   const [uploadSuccessNotice, setUploadSuccessNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (targetMatterId) {
+      setSelectedMatterId(targetMatterId);
+    }
+  }, [targetMatterId]);
+
+  useEffect(() => {
+    if (currentFolder && currentFolder !== 'ALL') {
+      setTargetCategory(currentFolder);
+    }
+  }, [currentFolder]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);

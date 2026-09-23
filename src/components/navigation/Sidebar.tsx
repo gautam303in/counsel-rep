@@ -27,6 +27,7 @@ export const Sidebar: React.FC = () => {
     theme,
     toggleTheme,
     logout,
+    openUploadModal,
   } = useApp();
 
   // Check if current user is screened from any matter
@@ -59,11 +60,11 @@ export const Sidebar: React.FC = () => {
       className={`w-64 border-r flex flex-col shrink-0 select-none z-20 relative font-sans transition-colors duration-200 ${
         isDark
           ? 'bg-[#0a1532] border-slate-800/80 text-slate-100'
-          : 'bg-[#FFFFF0] border-amber-200/70 text-slate-800'
+          : 'bg-white border-slate-200/80 text-slate-800'
       }`}
     >
       {/* Brand Header: Counsel Repos */}
-      <div className={`p-6 pb-4 transition-colors duration-200 ${isDark ? '' : 'bg-[#FFFFF0]'}`}>
+      <div className={`p-6 pb-4 transition-colors duration-200 ${isDark ? '' : 'bg-white'}`}>
         <div className="flex items-center gap-3">
           {/* Triangular Brand Mark */}
           <div className="w-8 h-8 flex items-center justify-center">
@@ -99,7 +100,7 @@ export const Sidebar: React.FC = () => {
           className={`mt-3 px-3 py-1.5 rounded-xl text-[11px] flex items-center justify-between border transition-colors ${
             isDark
               ? 'bg-blue-950/60 border-blue-800/40 text-blue-200'
-              : 'bg-[#FFFDF7] border-amber-200/80 text-slate-800 shadow-xs'
+              : 'bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
           }`}
         >
           <span className={`truncate font-semibold ${isDark ? 'text-blue-200' : 'text-slate-800'}`}>
@@ -118,10 +119,11 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Upload New Files Pill Button */}
-      <div className={`px-6 py-2 transition-colors duration-200 ${isDark ? '' : 'bg-[#FFFFF0]'}`}>
+      <div className={`px-6 py-2 transition-colors duration-200 ${isDark ? '' : 'bg-white'}`}>
         <button
           onClick={() => {
             setCurrentView('vault');
+            openUploadModal();
           }}
           className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2.5 px-5 rounded-full shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center justify-center gap-2 active:scale-98"
         >
@@ -133,7 +135,7 @@ export const Sidebar: React.FC = () => {
       {/* Primary Navigation Links */}
       <div
         className={`flex-1 py-3 px-3 space-y-1 overflow-y-auto transition-colors duration-200 ${
-          isDark ? '' : 'bg-[#FFFFF0]'
+          isDark ? '' : 'bg-white'
         }`}
       >
         {/* Super Admin Tab (If authorized) */}
@@ -178,7 +180,7 @@ export const Sidebar: React.FC = () => {
                     : 'bg-blue-600 text-white shadow-xs font-semibold'
                   : isDark
                   ? 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  : 'text-slate-700 hover:text-slate-900 hover:bg-[#F4F4E4]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -204,7 +206,7 @@ export const Sidebar: React.FC = () => {
                         : 'bg-blue-700 text-white border-blue-500'
                       : isDark
                       ? 'bg-slate-800/80 border-slate-700 text-blue-300'
-                      : 'bg-[#EDEDD5] border-amber-200/80 text-blue-800'
+                      : 'bg-slate-100 border-slate-200 text-blue-700'
                   }`}
                 >
                   {item.badge}
@@ -221,7 +223,7 @@ export const Sidebar: React.FC = () => {
           className={`mx-4 mb-2 p-2.5 rounded-xl text-[11px] leading-tight border transition-colors ${
             isDark
               ? 'bg-amber-950/30 border-amber-800/40 text-amber-200'
-              : 'bg-amber-50 border-amber-300 text-amber-900'
+              : 'bg-amber-50 border-amber-200 text-amber-900'
           }`}
         >
           <div
@@ -241,7 +243,7 @@ export const Sidebar: React.FC = () => {
         className={`p-4 border-t space-y-3 transition-colors duration-200 ${
           isDark
             ? 'border-slate-800/80 bg-slate-950/70 text-slate-400'
-            : 'border-amber-200/70 bg-[#FFFFF0] text-slate-600'
+            : 'border-slate-200/80 bg-slate-50/70 text-slate-600'
         }`}
       >
         <div
@@ -262,7 +264,7 @@ export const Sidebar: React.FC = () => {
         {/* Seat Quota Bar */}
         <div
           className={`w-full h-1.5 rounded-full overflow-hidden ${
-            isDark ? 'bg-slate-800' : 'bg-amber-100'
+            isDark ? 'bg-slate-800' : 'bg-slate-200'
           }`}
         >
           <div
@@ -281,7 +283,7 @@ export const Sidebar: React.FC = () => {
         {/* Theme & Logout Controls */}
         <div
           className={`pt-2 border-t flex items-center justify-between text-xs ${
-            isDark ? 'border-slate-800/60' : 'border-amber-200/60'
+            isDark ? 'border-slate-800/60' : 'border-slate-200'
           }`}
         >
           {/* Theme Toggle Button */}

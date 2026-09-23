@@ -75,7 +75,7 @@ export const VaultBreadcrumbNav: React.FC<VaultBreadcrumbNavProps> = ({
       className={`rounded-2xl border p-3 md:px-4 md:py-3 transition-colors shadow-xs ${
         isDark
           ? 'bg-slate-900/90 border-slate-800 text-slate-200'
-          : 'bg-[#FFFDF7] border-amber-200/80 text-slate-800'
+          : 'bg-white border-slate-200 text-slate-800'
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -94,7 +94,7 @@ export const VaultBreadcrumbNav: React.FC<VaultBreadcrumbNavProps> = ({
               className={`mr-1 p-1.5 rounded-lg border transition-all active:scale-95 flex items-center justify-center ${
                 isDark
                   ? 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-blue-500/50'
-                  : 'bg-white border-amber-200 text-slate-700 hover:text-slate-900 hover:bg-amber-50 hover:border-blue-400'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-100 hover:border-blue-400'
               }`}
             >
               <CornerLeftUp className="w-3.5 h-3.5 text-blue-500" />

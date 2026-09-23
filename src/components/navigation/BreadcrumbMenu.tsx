@@ -7,7 +7,6 @@ import {
   Receipt,
   Landmark,
   ShieldAlert,
-  ShieldCheck,
   Search,
   Building,
   Key,
@@ -69,6 +68,11 @@ export const BreadcrumbMenu: React.FC<BreadcrumbMenuProps> = ({ isDark }) => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
+
+  // Hide breadcrumb entirely on the Super Admin Licensing Engine view
+  if (currentView === 'super-admin') {
+    return null;
+  }
 
   // Active Screen Count
   const userScreens = ethicalWalls.filter((w) => w.active && w.userId === currentUser.id);
@@ -154,16 +158,6 @@ export const BreadcrumbMenu: React.FC<BreadcrumbMenuProps> = ({ isDark }) => {
       description: 'Role-based access matrix, security logs, and firm policies',
       icon: Key,
     },
-    {
-      id: 'super-admin',
-      label: 'SaaS Licensing Console',
-      category: 'Administration',
-      description: 'Master multi-tenant firm provisioning and seat quota management',
-      icon: ShieldCheck,
-      badge: 'Master',
-      badgeColor: 'text-purple-400 bg-purple-500/20 border-purple-500/40',
-      isSuperAdminOnly: true,
-    },
   ];
 
   // Filter based on user authorization and search query
@@ -226,7 +220,7 @@ export const BreadcrumbMenu: React.FC<BreadcrumbMenuProps> = ({ isDark }) => {
               : 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
             : isDark
             ? 'bg-slate-950/80 hover:bg-slate-900 border-slate-800 text-slate-200 hover:border-blue-500/50'
-            : 'bg-[#FFFDF7] hover:bg-white border-amber-200/80 text-slate-800 hover:border-blue-400'
+            : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-800 hover:border-blue-400'
         }`}
       >
         <CurrentIcon
@@ -268,13 +262,13 @@ export const BreadcrumbMenu: React.FC<BreadcrumbMenuProps> = ({ isDark }) => {
           className={`absolute left-0 top-full mt-2 w-[360px] sm:w-[500px] rounded-2xl border shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh] ${
             isDark
               ? 'bg-slate-900 border-slate-700 text-slate-100 shadow-black/80'
-              : 'bg-[#FFFFF0] border-amber-200/90 text-slate-900 shadow-xl'
+              : 'bg-white border-slate-200 text-slate-900 shadow-2xl'
           }`}
         >
           {/* Header with Brand, Tenant Info, and Quick Upload */}
           <div
             className={`p-4 border-b space-y-3 ${
-              isDark ? 'border-slate-800 bg-slate-950/80' : 'border-amber-200/80 bg-[#FFFDF7]'
+              isDark ? 'border-slate-800 bg-slate-950/80' : 'border-slate-200/80 bg-slate-50/80'
             }`}
           >
             <div className="flex items-center justify-between">
@@ -472,7 +466,7 @@ export const BreadcrumbMenu: React.FC<BreadcrumbMenuProps> = ({ isDark }) => {
             className={`p-3 border-t text-[11px] space-y-2 ${
               isDark
                 ? 'border-slate-800 bg-slate-950/80 text-slate-400'
-                : 'border-amber-200/80 bg-[#FFFDF7] text-slate-600'
+                : 'border-slate-200/80 bg-slate-50/80 text-slate-600'
             }`}
           >
             <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider">
@@ -484,7 +478,7 @@ export const BreadcrumbMenu: React.FC<BreadcrumbMenuProps> = ({ isDark }) => {
 
             <div
               className={`w-full h-1.5 rounded-full overflow-hidden ${
-                isDark ? 'bg-slate-800' : 'bg-amber-100'
+                isDark ? 'bg-slate-800' : 'bg-slate-200'
               }`}
             >
               <div

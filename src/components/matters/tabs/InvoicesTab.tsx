@@ -24,7 +24,8 @@ interface Props {
 }
 
 export const InvoicesTab: React.FC<Props> = ({ matter }) => {
-  const { invoices, applyTrustToInvoice, clients, setMatterSubTab } = useApp();
+  const { theme, invoices, applyTrustToInvoice, clients, setMatterSubTab } = useApp();
+  const isDark = theme === 'dark';
   const matterInvoices = invoices.filter((inv) => inv.matterId === matter.id);
 
   const client = clients.find((c) => c.id === matter.clientId);
@@ -49,18 +50,22 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-amber-400" />
+          <h3 className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+            <Receipt className="w-4 h-4 text-amber-500" />
             Matter Invoices & Statements
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Single-matter billing invariant: Each invoice is strictly tied to {matter.matterNumber}
           </p>
         </div>
 
         <button
           onClick={() => setMatterSubTab('wip')}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-slate-950 text-xs font-medium rounded hover:bg-amber-400 transition-colors"
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+            isDark
+              ? 'bg-amber-500 text-slate-950 hover:bg-amber-400'
+              : 'bg-amber-600 text-white hover:bg-amber-500 shadow-sm'
+          }`}
         >
           <Plus className="w-3.5 h-3.5" />
           <span>New Invoice from WIP</span>
@@ -69,33 +74,35 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
 
       {/* Financial Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-3">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider">Total Billed</div>
-          <div className="text-base font-semibold font-num text-slate-100 mt-0.5">
+        <div className={`border rounded-lg p-3 ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
+          <div className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Billed</div>
+          <div className={`text-base font-semibold font-num mt-0.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
             {formatINR(totalBilled)}
           </div>
         </div>
-        <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-3">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider">Collected</div>
-          <div className="text-base font-semibold font-num text-emerald-400 mt-0.5">
+        <div className={`border rounded-lg p-3 ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
+          <div className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Collected</div>
+          <div className={`text-base font-semibold font-num mt-0.5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
             {formatINR(totalPaid)}
           </div>
         </div>
-        <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-3">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider">
+        <div className={`border rounded-lg p-3 ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
+          <div className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Outstanding A/R
           </div>
-          <div className="text-base font-semibold font-num text-rose-300 mt-0.5">
+          <div className={`text-base font-semibold font-num mt-0.5 ${isDark ? 'text-rose-300' : 'text-rose-600'}`}>
             {formatINR(totalAr)}
           </div>
         </div>
       </div>
 
       {/* Invoices List */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-lg overflow-hidden">
+      <div className={`border rounded-lg overflow-hidden ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-xs'}`}>
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 uppercase tracking-wider text-[10px]">
+            <tr className={`border-b uppercase tracking-wider text-[10px] ${
+              isDark ? 'border-slate-800 bg-slate-950/60 text-slate-400' : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}>
               <th className="py-2.5 px-3">Invoice Number</th>
               <th className="py-2.5 px-3">Issued Date</th>
               <th className="py-2.5 px-3">Due Date</th>
@@ -107,36 +114,36 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
               <th className="py-2.5 px-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className={isDark ? 'divide-y divide-slate-800/60' : 'divide-y divide-slate-200'}>
             {matterInvoices.map((inv) => (
-              <tr key={inv.id} className="hover:bg-slate-800/40 transition-colors">
-                <td className="py-2.5 px-3 font-mono font-semibold text-amber-300">
+              <tr key={inv.id} className={isDark ? 'hover:bg-slate-800/40 transition-colors' : 'hover:bg-slate-50/80 transition-colors'}>
+                <td className={`py-2.5 px-3 font-mono font-semibold ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
                   {inv.invoiceNumber}
                 </td>
-                <td className="py-2.5 px-3 font-mono text-slate-400">{inv.issuedDate}</td>
-                <td className="py-2.5 px-3 font-mono text-slate-400">{inv.dueDate}</td>
-                <td className="py-2.5 px-3 text-right font-num text-slate-300">
+                <td className={`py-2.5 px-3 font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{inv.issuedDate}</td>
+                <td className={`py-2.5 px-3 font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{inv.dueDate}</td>
+                <td className={`py-2.5 px-3 text-right font-num ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   {formatINR(inv.subtotalTime)}
                 </td>
-                <td className="py-2.5 px-3 text-right font-num text-slate-300">
+                <td className={`py-2.5 px-3 text-right font-num ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   {formatINR(inv.subtotalExpenses)}
                 </td>
-                <td className="py-2.5 px-3 text-right font-num font-semibold text-slate-100">
+                <td className={`py-2.5 px-3 text-right font-num font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                   {formatINR(inv.totalAmount)}
                 </td>
-                <td className="py-2.5 px-3 text-right font-num font-bold text-rose-300">
+                <td className={`py-2.5 px-3 text-right font-num font-bold ${isDark ? 'text-rose-300' : 'text-rose-600'}`}>
                   {formatINR(inv.balanceDue)}
                 </td>
                 <td className="py-2.5 px-3 text-center">
                   <span
                     className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
                       inv.status === 'PAID'
-                        ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/60'
+                        ? isDark ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/60' : 'bg-emerald-50 text-emerald-700 border-emerald-300'
                         : inv.status === 'PART_PAID'
-                        ? 'bg-sky-950/50 text-sky-300 border-sky-800/60'
+                        ? isDark ? 'bg-sky-950/50 text-sky-300 border-sky-800/60' : 'bg-sky-50 text-sky-700 border-sky-300'
                         : inv.status === 'ISSUED'
-                        ? 'bg-amber-950/50 text-amber-300 border-amber-800/60'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                        ? isDark ? 'bg-amber-950/50 text-amber-300 border-amber-800/60' : 'bg-amber-50 text-amber-700 border-amber-300'
+                        : isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-300'
                     }`}
                   >
                     {inv.status}
@@ -146,14 +153,14 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
                   <button
                     onClick={() => setSelectedInvoice(inv)}
                     title="View Formal PDF Invoice"
-                    className="p-1 hover:bg-slate-800 text-slate-400 hover:text-amber-300 rounded transition-colors"
+                    className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-amber-300' : 'hover:bg-slate-100 text-slate-500 hover:text-amber-600'}`}
                   >
                     <Eye className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setShowLedesModal(inv)}
                     title="View LEDES-1998B Format"
-                    className="p-1 hover:bg-slate-800 text-slate-400 hover:text-sky-300 rounded transition-colors"
+                    className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-sky-300' : 'hover:bg-slate-100 text-slate-500 hover:text-sky-600'}`}
                   >
                     <FileCode className="w-3.5 h-3.5" />
                   </button>
@@ -166,26 +173,34 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
 
       {/* Formal PDF Invoice View Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className={`border rounded-xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] flex flex-col ${
+            isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-300'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isDark ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-semibold text-slate-100">
+                <FileText className="w-5 h-5 text-amber-500" />
+                <h3 className={`text-base font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                   Invoice {selectedInvoice.invoiceNumber}
                 </h3>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 text-slate-200 text-xs rounded hover:bg-slate-700"
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-colors ${
+                    isDark
+                      ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  }`}
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Print</span>
                 </button>
                 <button
                   onClick={() => setSelectedInvoice(null)}
-                  className="text-slate-400 hover:text-slate-200 text-sm ml-2"
+                  className={`text-sm ml-2 ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
                 >
                   ✕
                 </button>
@@ -336,26 +351,32 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
 
       {/* LEDES 1998B Modal */}
       {showLedesModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-sky-400" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className={`border rounded-xl max-w-lg w-full p-5 space-y-4 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-2 ${
+              isDark ? 'border-slate-800' : 'border-slate-200'
+            }`}>
+              <h3 className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                <FileCode className="w-4 h-4 text-sky-500" />
                 LEDES-1998B Electronic Data Format
               </h3>
               <button
                 onClick={() => setShowLedesModal(null)}
-                className="text-slate-400 hover:text-slate-200 text-sm"
+                className={`text-sm ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 ✕
               </button>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               Electronic legal electronic data exchange standard file format for enterprise e-billing
               software (TyMetrix, CounselLink, Brightflag).
             </p>
 
-            <div className="bg-slate-950 border border-slate-800 rounded p-3 text-xs font-mono text-emerald-300 whitespace-pre-wrap max-h-60 overflow-y-auto">
+            <div className={`border rounded p-3 text-xs font-mono whitespace-pre-wrap max-h-60 overflow-y-auto ${
+              isDark ? 'bg-slate-950 border-slate-800 text-emerald-400' : 'bg-slate-900 border-slate-700 text-emerald-400'
+            }`}>
               {showLedesModal.ledesFormatString ||
                 `INVOICE|${showLedesModal.invoiceNumber}|20260915|${showLedesModal.totalAmount}.00|INR\nLINE|FEE|20260905|EV|850.00|10.5|8925.00|L240`}
             </div>
@@ -363,7 +384,9 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setShowLedesModal(null)}
-                className="px-3 py-1.5 bg-amber-500 text-slate-950 font-medium text-xs rounded hover:bg-amber-400"
+                className={`px-3 py-1.5 font-medium text-xs rounded transition-colors ${
+                  isDark ? 'bg-amber-500 text-slate-950 hover:bg-amber-400' : 'bg-amber-600 text-white hover:bg-amber-500 shadow-sm'
+                }`}
               >
                 Close
               </button>

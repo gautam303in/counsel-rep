@@ -37,6 +37,7 @@ import {
   Copy,
   Trash2,
   Tag as TagIcon,
+  UploadCloud,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAudit } from '../../hooks/useAudit';
@@ -81,6 +82,10 @@ export const FirmVaultView: React.FC = () => {
     deleteDocuments,
     bulkMoveDocuments,
     bulkCopyDocuments,
+    openUploadModal,
+    closeUploadModal,
+    isUploadModalOpen,
+    uploadModalFolder,
   } = useApp();
   const { logDocumentAction, logEvent } = useAudit();
   const isDark = theme === 'dark';
@@ -92,6 +97,12 @@ export const FirmVaultView: React.FC = () => {
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [uploadTasks, setUploadTasks] = useState<UploadTask[]>([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const isUploadOpen = showUploadModal || isUploadModalOpen;
+  const handleCloseUploadModal = () => {
+    setShowUploadModal(false);
+    closeUploadModal();
+  };
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [folderList, setFolderList] = useState<string[]>([
@@ -493,7 +504,7 @@ export const FirmVaultView: React.FC = () => {
   return (
     <div
       className={`flex-1 overflow-y-auto p-6 md:p-8 space-y-7 font-sans transition-colors duration-200 ${
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#FFFFF0] text-slate-800'
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
       {/* Top Header: Counsel Repos */}
@@ -517,6 +528,15 @@ export const FirmVaultView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              title="Upload Legal Documents or Folders"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition-all active:scale-95"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-white" />
+              <span>Upload Document</span>
+            </button>
+
             <button
               onClick={() => setAiFolderModalOpen(true)}
               title="Analyze Matter Files & Propose Nested Folder Structure"
@@ -756,14 +776,6 @@ export const FirmVaultView: React.FC = () => {
         </div>
       </div>
 
-      {/* DROP ZONE COMPONENT SPECIFICALLY FOR FIRMVAULTVIEW */}
-      <VaultDropzone
-        currentFolder={selectedFolder}
-        onUploadStart={handleUploadStart}
-        onUploadProgress={handleUploadProgress}
-        onUploadComplete={handleUploadComplete}
-      />
-
       {/* ALL FILES DATA TABLE & NAVIGATION */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -774,12 +786,21 @@ export const FirmVaultView: React.FC = () => {
           >
             Repository Documents & Exhibits
           </div>
-          <div
-            className={`text-xs font-medium font-num ${
-              isDark ? 'text-slate-400' : 'text-slate-500'
-            }`}
-          >
-            {filteredDocs.length} items found
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-white" />
+              <span>Upload Document</span>
+            </button>
+            <div
+              className={`text-xs font-medium font-num ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}
+            >
+              {filteredDocs.length} items found
+            </div>
           </div>
         </div>
 
@@ -1410,6 +1431,63 @@ export const FirmVaultView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SEPARATE FRAME / MODAL DIALOG FOR DOCUMENT UPLOAD & INGESTION */}
+      {isUploadOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+          onClick={handleCloseUploadModal}
+        >
+          <div
+            className={`border rounded-2xl md:rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl relative transition-all duration-200 animate-in zoom-in-95 ${
+              isDark ? 'bg-slate-900 border-slate-800 shadow-black/80' : 'bg-white border-slate-200 shadow-2xl'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Frame Header */}
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-xs">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3
+                    className={`text-base font-bold tracking-tight ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    Upload Document & Legal Ingestion
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Drag-and-drop intake with SHA-256 integrity hashing and OCR full-text search indexing.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseUploadModal}
+                className={`p-2 rounded-xl transition-colors ${
+                  isDark
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+                title="Close Upload Window"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Dropzone Component inside the separate frame */}
+            <VaultDropzone
+              currentFolder={uploadModalFolder || (selectedFolder !== 'ALL' ? selectedFolder : 'Discovery')}
+              onUploadStart={handleUploadStart}
+              onUploadProgress={handleUploadProgress}
+              onUploadComplete={(task, doc) => {
+                handleUploadComplete(task, doc);
+              }}
+            />
           </div>
         </div>
       )}

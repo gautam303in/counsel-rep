@@ -18,6 +18,7 @@ import {
 } from '../data/mockData';
 import {
   INITIAL_TENANTS,
+  LICENSE_PLANS,
   SUPER_ADMIN_USER,
 } from '../data/saasData';
 import { DEFAULT_ROLE_PERMISSIONS } from '../services/rbac';
@@ -30,6 +31,8 @@ import {
   ExpenseEntry,
   Invoice,
   LegalHold,
+  LicensePlanDetails,
+  LicenseTier,
   Matter,
   MatterParty,
   MatterTask,
@@ -99,6 +102,9 @@ interface AppContextType {
   addTenant: (tenant: Omit<Tenant, 'id' | 'createdAt'>) => void;
   regenerateLicenseKey: (tenantId: string) => string;
   toggleTenantFeature: (tenantId: string, feature: keyof TenantFeatures) => void;
+  licensePlans: LicensePlanDetails[];
+  updateLicensePlan: (tier: LicenseTier, updates: Partial<LicensePlanDetails>) => void;
+  addLicensePlan: (plan: LicensePlanDetails) => void;
 
   // Tenant / Portal Admin & RBAC
   currentUser: User;
@@ -216,6 +222,13 @@ interface AppContextType {
     matterId?: string,
     matterNumber?: string
   ) => void;
+
+  // Upload Modal State
+  isUploadModalOpen: boolean;
+  uploadModalMatterId?: string;
+  uploadModalFolder?: string;
+  openUploadModal: (matterId?: string, folder?: string) => void;
+  closeUploadModal: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -403,6 +416,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const [licensePlans, setLicensePlans] = useState<LicensePlanDetails[]>(LICENSE_PLANS);
+
+  const updateLicensePlan = (tier: LicenseTier, updates: Partial<LicensePlanDetails>) => {
+    setLicensePlans((prev) =>
+      prev.map((p) => (p.tier === tier ? { ...p, ...updates } : p))
+    );
+  };
+
+  const addLicensePlan = (plan: LicensePlanDetails) => {
+    setLicensePlans((prev) => [...prev, plan]);
+  };
+
   // Views & Routing State
   const [currentView, setCurrentView] = useState<MainNavView>('dashboard');
   const [activeMatterId, setActiveMatterId] = useState<string | null>('mat-1');
@@ -443,6 +468,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (interval) clearInterval(interval);
     };
   }, [isTimerRunning]);
+
+  // Global Upload Modal State
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadModalMatterId, setUploadModalMatterId] = useState<string | undefined>(undefined);
+  const [uploadModalFolder, setUploadModalFolder] = useState<string | undefined>(undefined);
+
+  const openUploadModal = (matterId?: string, folder?: string) => {
+    setUploadModalMatterId(matterId);
+    setUploadModalFolder(folder);
+    setIsUploadModalOpen(true);
+  };
+
+  const closeUploadModal = () => {
+    setIsUploadModalOpen(false);
+    setUploadModalMatterId(undefined);
+    setUploadModalFolder(undefined);
+  };
 
   const logAudit = (
     action: AuditEvent['action'],
@@ -503,7 +545,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'TIME_RECORDED',
       'TimeEntry',
       newEntry.id,
-      `${newEntry.hours}h logged by ${currentUser.name} ($${newEntry.total})`,
+      `${newEntry.hours}h logged by ${currentUser.name} (₹${newEntry.total})`,
       newEntry.matterId,
       m?.matterNumber
     );
@@ -624,7 +666,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'INVOICE_ISSUED',
       'Invoice',
       invoiceId,
-      `Draft Invoice ${invoiceNumber} created by ${currentUser.name} for $${totalAmount}`,
+      `Draft Invoice ${invoiceNumber} created by ${currentUser.name} for ₹${totalAmount}`,
       matterId,
       matter?.matterNumber
     );
@@ -690,7 +732,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'TRUST_APPLIED_TO_INVOICE',
       'Trust',
       txId,
-      `Applied $${amount} from IOLTA Trust to Invoice #${inv.invoiceNumber}`,
+      `Applied ₹${amount} from IOLTA Trust to Invoice #${inv.invoiceNumber}`,
       inv.matterId,
       inv.matterNumber
     );
@@ -758,7 +800,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'TRUST_DEPOSIT',
       'Trust',
       txId,
-      `Retainer deposit of $${amount} received for Matter ${m?.matterNumber}`,
+      `Retainer deposit of ₹${amount} received for Matter ${m?.matterNumber}`,
       matterId,
       m?.matterNumber
     );
@@ -1254,6 +1296,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addTenant,
         regenerateLicenseKey,
         toggleTenantFeature,
+        licensePlans,
+        updateLicensePlan,
+        addLicensePlan,
 
         currentUser,
         setCurrentUser,
@@ -1330,6 +1375,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addTask,
         addChronology,
         logAudit,
+
+        isUploadModalOpen,
+        uploadModalMatterId,
+        uploadModalFolder,
+        openUploadModal,
+        closeUploadModal,
       }}
     >
       {children}

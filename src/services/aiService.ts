@@ -391,7 +391,7 @@ Plaintiff ${clientName} respectfully moves this Court, pursuant to Rule 56 of th
 
 II. STATEMENT OF MATERIAL FACTS NOT IN GENUINE DISPUTE
 1. On or about October 14, 2023, the parties executed a binding Agreement containing an express exclusivity clause and non-circumvention covenants [Citation 1: ${docRef1}].
-2. Section 9(b) expressly provides that "any breach shall constitute irreparable harm entitling the non-breaching party to immediate equitable relief and liquidated damages of not less than $2,500,000" [Citation 1].
+2. Section 9(b) expressly provides that "any breach shall constitute irreparable harm entitling the non-breaching party to immediate equitable relief and liquidated damages of not less than ₹2,500,000" [Citation 1].
 3. Defendants engaged in willful, unauthorized circumvention, as corroborated by contemporaneous communications and admissions [Citation 2: ${docRef2}].
 4. Despite formal demand letters, Defendants failed to cure within the thirty (30) day contractual window.
 
@@ -454,7 +454,7 @@ This firm represents ${clientName} in connection with ongoing commercial relatio
 
 As documented in verified records [See ${docRef1}], your client was placed on written notice of its failure to satisfy contractual obligations. Specifically:
 1. ${request.keyLegalArguments}
-2. Your client's failure to remit outstanding sums of $385,000 due under Invoice Schedule B.
+2. Your client's failure to remit outstanding sums of ₹385,000 due under Invoice Schedule B.
 3. Continued unauthorized utilization of protected proprietary assets [See ${docRef2}].
 
 DEMAND IS HEREBY MADE that your client immediately:

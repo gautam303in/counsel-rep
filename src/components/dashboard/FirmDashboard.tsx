@@ -66,7 +66,7 @@ export const FirmDashboard: React.FC = () => {
   return (
     <div
       className={`flex-1 overflow-y-auto p-6 md:p-8 space-y-6 font-sans transition-colors duration-200 ${
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#FFFFF0] text-slate-800'
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
       {/* Welcome Banner */}
@@ -102,7 +102,7 @@ export const FirmDashboard: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl border transition-all shadow-xs ${
               isDark
                 ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-800'
-                : 'bg-[#FFFDF7] hover:bg-amber-50 text-slate-700 hover:text-slate-900 border-amber-200/80'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200'
             }`}
           >
             <Shield className="w-4 h-4 text-blue-500" />
@@ -126,7 +126,7 @@ export const FirmDashboard: React.FC = () => {
           className={`rounded-2xl p-5 cursor-pointer hover:shadow-md transition-all group border shadow-xs ${
             isDark
               ? 'bg-slate-900 border-slate-800 hover:border-amber-500/40'
-              : 'bg-[#FFFDF7] border-amber-200/80 hover:border-amber-400/60'
+              : 'bg-white border-slate-200 hover:border-amber-400/60'
           }`}
         >
           <div
@@ -153,7 +153,7 @@ export const FirmDashboard: React.FC = () => {
           className={`rounded-2xl p-5 cursor-pointer hover:shadow-md transition-all group border shadow-xs ${
             isDark
               ? 'bg-slate-900 border-slate-800 hover:border-rose-500/40'
-              : 'bg-[#FFFDF7] border-amber-200/80 hover:border-rose-400/60'
+              : 'bg-white border-slate-200 hover:border-rose-400/60'
           }`}
         >
           <div
@@ -180,7 +180,7 @@ export const FirmDashboard: React.FC = () => {
           className={`rounded-2xl p-5 cursor-pointer hover:shadow-md transition-all group border shadow-xs ${
             isDark
               ? 'bg-slate-900 border-slate-800 hover:border-blue-500/40'
-              : 'bg-[#FFFDF7] border-amber-200/80 hover:border-blue-400/60'
+              : 'bg-white border-slate-200 hover:border-blue-400/60'
           }`}
         >
           <div
@@ -209,7 +209,7 @@ export const FirmDashboard: React.FC = () => {
           className={`rounded-2xl p-5 cursor-pointer hover:shadow-md transition-all group border shadow-xs ${
             isDark
               ? 'bg-slate-900 border-slate-800 hover:border-emerald-500/40'
-              : 'bg-[#FFFDF7] border-amber-200/80 hover:border-emerald-400/60'
+              : 'bg-white border-slate-200 hover:border-emerald-400/60'
           }`}
         >
           <div
@@ -241,7 +241,7 @@ export const FirmDashboard: React.FC = () => {
           className={`rounded-2xl p-5 cursor-pointer transition-all border shadow-xs ${
             isDark
               ? 'bg-slate-900 border-slate-800 hover:border-amber-500/40'
-              : 'bg-[#FFFDF7] border-amber-200/80 hover:border-amber-400/60'
+              : 'bg-white border-slate-200 hover:border-amber-400/60'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
@@ -275,7 +275,7 @@ export const FirmDashboard: React.FC = () => {
           className={`rounded-2xl p-5 cursor-pointer transition-all border shadow-xs ${
             isDark
               ? 'bg-slate-900 border-slate-800 hover:border-rose-500/40'
-              : 'bg-[#FFFDF7] border-amber-200/80 hover:border-rose-400/60'
+              : 'bg-white border-slate-200 hover:border-rose-400/60'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
@@ -336,7 +336,7 @@ export const FirmDashboard: React.FC = () => {
                 className={`rounded-2xl p-5 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between space-y-3 border shadow-xs group ${
                   isDark
                     ? 'bg-slate-900 border-slate-800 hover:border-blue-500/40'
-                    : 'bg-[#FFFDF7] border-amber-200/80 hover:border-blue-400/60'
+                    : 'bg-white border-slate-200 hover:border-blue-400/60'
                 }`}
               >
                 <div className="space-y-2">

@@ -24,7 +24,8 @@ interface Props {
 }
 
 export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
-  const { documents, addDocument, logAudit, currentUser } = useApp();
+  const { documents, addDocument, logAudit, currentUser, theme } = useApp();
+  const isDark = theme === 'dark';
   const matterDocs = documents.filter((d) => d.matterId === matter.id);
 
   const [documentType, setDocumentType] = useState<AIDraftRequest['documentType']>(
@@ -129,11 +130,15 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
+          <h3
+            className={`text-sm font-semibold flex items-center gap-2 ${
+              isDark ? 'text-slate-100' : 'text-slate-900'
+            }`}
+          >
+            <Sparkles className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-blue-600'}`} />
             AI Drafting Studio & Citation Mapping
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Jurisdictional brief synthesis, grounded against authorized Matter Vault records
           </p>
         </div>
@@ -142,7 +147,11 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium rounded hover:bg-slate-700 transition-colors"
+              className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-medium rounded transition-colors ${
+                isDark
+                  ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 shadow-xs'
+              }`}
             >
               <Copy className="w-3.5 h-3.5" />
               <span>Copy Text</span>
@@ -150,10 +159,12 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
             <button
               onClick={handleCommitToVault}
               disabled={committedToVault}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors shadow ${
                 committedToVault
-                  ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'
-                  : 'bg-amber-500 text-slate-950 hover:bg-amber-400'
+                  ? isDark
+                    ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-300'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white'
               }`}
             >
               <FolderPlus className="w-3.5 h-3.5" />
@@ -165,19 +176,37 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left 5 Cols: Configuration Parameters & Vault Grounding */}
-        <div className="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-lg p-5 space-y-4">
-          <div className="text-xs font-semibold text-slate-200 uppercase tracking-wider border-b border-slate-800 pb-2">
+        <div
+          className={`lg:col-span-5 rounded-lg p-5 space-y-4 border ${
+            isDark
+              ? 'bg-slate-900/90 border-slate-800'
+              : 'bg-white border-slate-200 shadow-xs'
+          }`}
+        >
+          <div
+            className={`text-xs font-semibold uppercase tracking-wider border-b pb-2 ${
+              isDark ? 'text-slate-200 border-slate-800' : 'text-slate-800 border-slate-100'
+            }`}
+          >
             Drafting Specifications
           </div>
 
           <div>
-            <label className="block text-[11px] text-slate-400 uppercase tracking-wider mb-1">
+            <label
+              className={`block text-[11px] uppercase tracking-wider mb-1 ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
               Instrument Type
             </label>
             <select
               value={documentType}
               onChange={(e) => setDocumentType(e.target.value as any)}
-              className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50 font-medium"
+              className={`w-full rounded px-3 py-2 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 border ${
+                isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-200 focus:border-amber-500/50'
+                  : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             >
               <option value="Motion for Summary Judgment">Motion for Summary Judgment</option>
               <option value="Demand Letter">Demand Letter</option>
@@ -189,46 +218,74 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
           </div>
 
           <div>
-            <label className="block text-[11px] text-slate-400 uppercase tracking-wider mb-1">
+            <label
+              className={`block text-[11px] uppercase tracking-wider mb-1 ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
               Court / Jurisdiction
             </label>
             <input
               type="text"
               value={jurisdiction}
               onChange={(e) => setJurisdiction(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50"
+              className={`w-full rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 border ${
+                isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-200 focus:border-amber-500/50'
+                  : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-[11px] text-slate-400 uppercase tracking-wider mb-1">
+            <label
+              className={`block text-[11px] uppercase tracking-wider mb-1 ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
               Client Posture & Position
             </label>
             <textarea
               rows={2}
               value={clientPosition}
               onChange={(e) => setClientPosition(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50 resize-none"
+              className={`w-full rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 border resize-none ${
+                isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-200 focus:border-amber-500/50'
+                  : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-[11px] text-slate-400 uppercase tracking-wider mb-1">
+            <label
+              className={`block text-[11px] uppercase tracking-wider mb-1 ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
               Substantive Legal Arguments & Statutes
             </label>
             <textarea
               rows={3}
               value={keyLegalArguments}
               onChange={(e) => setKeyLegalArguments(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50 resize-none"
+              className={`w-full rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 border resize-none ${
+                isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-200 focus:border-amber-500/50'
+                  : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             />
           </div>
 
           {/* Vault Document Selection for Context Injection */}
           <div>
-            <label className="block text-[11px] text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <label
+              className={`block text-[11px] uppercase tracking-wider mb-1.5 flex items-center justify-between ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
               <span>Authorized Vault Documents for Grounding</span>
-              <span className="font-num text-amber-400">
+              <span className={`font-num ${isDark ? 'text-amber-400' : 'text-blue-600'}`}>
                 {selectedDocIds.length} of {matterDocs.length} Selected
               </span>
             </label>
@@ -242,19 +299,27 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
                     onClick={() => toggleDocSelection(doc.id)}
                     className={`p-2 rounded border text-xs cursor-pointer flex items-start gap-2.5 transition-colors ${
                       isChecked
-                        ? 'bg-amber-500/10 border-amber-500/30 text-slate-200'
-                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? isDark
+                          ? 'bg-amber-500/10 border-amber-500/30 text-slate-200'
+                          : 'bg-blue-50 border-blue-200 text-blue-900'
+                        : isDark
+                        ? 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => {}}
-                      className="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/30"
+                      className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30"
                     />
                     <div className="overflow-hidden flex-1">
                       <div className="font-semibold truncate">{doc.title}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div
+                        className={`text-[10px] font-mono ${
+                          isDark ? 'text-slate-400' : 'text-slate-500'
+                        }`}
+                      >
                         {doc.folder} · {doc.currentVersion}
                       </div>
                     </div>
@@ -265,18 +330,24 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
           </div>
 
           {/* Watermark Toggle */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-            <span className="text-xs text-slate-300">
+          <div
+            className={`flex items-center justify-between pt-2 border-t ${
+              isDark ? 'border-slate-800/80' : 'border-slate-100'
+            }`}
+          >
+            <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
               Apply Privileged & Confidential Watermark
             </span>
             <button
               onClick={() => setIncludeWatermark(!includeWatermark)}
-              className="text-amber-400"
+              className={isDark ? 'text-amber-400' : 'text-blue-600'}
             >
               {includeWatermark ? (
                 <ToggleRight className="w-6 h-6" />
               ) : (
-                <ToggleLeft className="w-6 h-6 text-slate-600" />
+                <ToggleLeft
+                  className={`w-6 h-6 ${isDark ? 'text-slate-600' : 'text-slate-300'}`}
+                />
               )}
             </button>
           </div>
@@ -284,7 +355,7 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full py-2.5 bg-amber-500 text-slate-950 font-semibold text-xs rounded-md hover:bg-amber-400 transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-md transition-colors flex items-center justify-center gap-2 shadow disabled:opacity-50"
           >
             {isGenerating ? (
               <>
@@ -301,25 +372,51 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
         </div>
 
         {/* Right 7 Cols: Draft Preview & Interactive Citation Inspector */}
-        <div className="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-lg p-5 flex flex-col justify-between space-y-4">
+        <div
+          className={`lg:col-span-7 rounded-lg p-5 flex flex-col justify-between space-y-4 border ${
+            isDark
+              ? 'bg-slate-900/90 border-slate-800'
+              : 'bg-white border-slate-200 shadow-xs'
+          }`}
+        >
           <div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3">
+            <div
+              className={`flex items-center justify-between border-b pb-2.5 mb-3 ${
+                isDark ? 'border-slate-800' : 'border-slate-100'
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-amber-400" />
-                <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
+                <BookOpen className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-blue-600'}`} />
+                <h4
+                  className={`text-xs font-semibold uppercase tracking-wider ${
+                    isDark ? 'text-slate-200' : 'text-slate-800'
+                  }`}
+                >
                   Draft Instrument Preview
                 </h4>
               </div>
               {draftResult && (
-                <span className="text-[11px] font-mono text-slate-400">
+                <span
+                  className={`text-[11px] font-mono ${
+                    isDark ? 'text-slate-400' : 'text-slate-500'
+                  }`}
+                >
                   {draftResult.tokenCount} Tokens · {draftResult.citations.length} Citations
                 </span>
               )}
             </div>
 
             {isGenerating ? (
-              <div className="h-96 flex flex-col items-center justify-center space-y-3 text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+              <div
+                className={`h-96 flex flex-col items-center justify-center space-y-3 ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                <Loader2
+                  className={`w-8 h-8 animate-spin ${
+                    isDark ? 'text-amber-400' : 'text-blue-600'
+                  }`}
+                />
                 <p className="text-xs">
                   Reviewing statutory precedents and analyzing {selectedDocIds.length} vault documents...
                 </p>
@@ -328,17 +425,29 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
               <div className="space-y-4">
                 {/* Draft Document Box */}
                 <div
-                  className={`bg-slate-950 border border-slate-800 rounded-lg p-5 font-legal-heading text-xs text-slate-200 leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto relative ${
-                    draftResult.watermark ? 'watermark-draft' : ''
-                  }`}
+                  className={`border rounded-lg p-5 font-legal-heading text-xs leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto relative ${
+                    isDark
+                      ? 'bg-slate-950 border-slate-800 text-slate-200'
+                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                  } ${draftResult.watermark ? 'watermark-draft' : ''}`}
                 >
                   {draftResult.content}
                 </div>
 
                 {/* Citation Mapping Drawer */}
                 {draftResult.citations.length > 0 && (
-                  <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-3 space-y-2">
-                    <div className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <div
+                    className={`border rounded-lg p-3 space-y-2 ${
+                      isDark
+                        ? 'bg-slate-950/80 border-slate-800'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div
+                      className={`text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 ${
+                        isDark ? 'text-amber-400' : 'text-blue-600'
+                      }`}
+                    >
                       <Quote className="w-3.5 h-3.5" />
                       Verified Evidentiary Citations
                     </div>
@@ -346,20 +455,38 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
                       {draftResult.citations.map((cite) => (
                         <div
                           key={cite.citationNumber}
-                          className="p-2 rounded bg-slate-900 border border-slate-800 text-xs space-y-1"
+                          className={`p-2 rounded border text-xs space-y-1 ${
+                            isDark
+                              ? 'bg-slate-900 border-slate-800'
+                              : 'bg-white border-slate-200 shadow-xs'
+                          }`}
                         >
-                          <div className="flex items-center justify-between text-slate-300 font-medium">
-                            <span className="text-amber-300">
+                          <div
+                            className={`flex items-center justify-between font-medium ${
+                              isDark ? 'text-slate-300' : 'text-slate-700'
+                            }`}
+                          >
+                            <span className={isDark ? 'text-amber-300' : 'text-blue-700'}>
                               [Citation {cite.citationNumber}]: {cite.sourceDocTitle}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                            <span
+                              className={`text-[10px] font-mono ${
+                                isDark ? 'text-slate-500' : 'text-slate-400'
+                              }`}
+                            >
                               Doc ID: {cite.sourceDocId}
                             </span>
                           </div>
-                          <div className="text-[11px] text-slate-400 italic">
+                          <div
+                            className={`text-[11px] italic ${
+                              isDark ? 'text-slate-400' : 'text-slate-600'
+                            }`}
+                          >
                             "{cite.quotedText}"
                           </div>
-                          <div className="text-[10px] text-emerald-400">{cite.relevance}</div>
+                          <div className="text-[10px] text-emerald-600 font-semibold">
+                            {cite.relevance}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -367,10 +494,28 @@ export const AIDraftingTab: React.FC<Props> = ({ matter }) => {
                 )}
               </div>
             ) : (
-              <div className="h-96 border border-dashed border-slate-800 rounded-lg flex flex-col items-center justify-center text-center p-6 space-y-2 text-slate-500">
-                <FileText className="w-8 h-8 text-slate-600" />
-                <p className="text-xs font-medium text-slate-400">No Draft Generated Yet</p>
-                <p className="text-[11px] max-w-sm text-slate-500">
+              <div
+                className={`h-96 border border-dashed rounded-lg flex flex-col items-center justify-center text-center p-6 space-y-2 ${
+                  isDark
+                    ? 'border-slate-800 text-slate-500'
+                    : 'border-slate-300 text-slate-400'
+                }`}
+              >
+                <FileText
+                  className={`w-8 h-8 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}
+                />
+                <p
+                  className={`text-xs font-medium ${
+                    isDark ? 'text-slate-400' : 'text-slate-600'
+                  }`}
+                >
+                  No Draft Generated Yet
+                </p>
+                <p
+                  className={`text-[11px] max-w-sm ${
+                    isDark ? 'text-slate-500' : 'text-slate-500'
+                  }`}
+                >
                   Configure the instrument specifications on the left and click "Generate Grounded
                   Instrument" to synthesize a court-ready draft with citations.
                 </p>
