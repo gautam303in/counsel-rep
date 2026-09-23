@@ -10,7 +10,6 @@ import { MattersDirectory } from './components/matters/MattersDirectory';
 import { MatterWorkspace } from './components/matters/MatterWorkspace';
 import { Sidebar } from './components/navigation/Sidebar';
 import { TopBar } from './components/navigation/TopBar';
-import { ClientPortalView } from './components/portal/ClientPortalView';
 import { GlobalSearchModal } from './components/search/GlobalSearchModal';
 import { TrustAccountingView } from './components/trust/TrustAccountingView';
 import { FirmVaultView } from './components/vault/FirmVaultView';
@@ -33,7 +32,7 @@ const MainLayout: React.FC = () => {
         className={`w-full h-full max-w-[1720px] rounded-[24px] md:rounded-[32px] overflow-hidden flex flex-row border transition-colors duration-200 shadow-2xl ${
           isDark
             ? 'bg-slate-900 border-slate-800/80 shadow-black/80'
-            : 'bg-white border-slate-200 shadow-slate-400/40'
+            : 'bg-[#FFFFF0] border-amber-200/80 shadow-stone-300/40'
         }`}
       >
         {/* Left Curved Sidebar */}
@@ -42,7 +41,7 @@ const MainLayout: React.FC = () => {
         {/* Main Content Pane */}
         <div
           className={`flex-1 flex flex-col min-w-0 overflow-hidden relative transition-colors duration-200 ${
-            isDark ? 'bg-slate-950' : 'bg-[#fafcff]'
+            isDark ? 'bg-slate-950' : 'bg-[#FFFFF0]'
           }`}
         >
           {/* Top Control Bar */}
@@ -51,7 +50,7 @@ const MainLayout: React.FC = () => {
           {/* View Routing */}
           <main
             className={`flex-1 flex flex-col overflow-hidden relative transition-colors duration-200 ${
-              isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#fafcff] text-slate-800'
+              isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#FFFFF0] text-slate-800'
             }`}
           >
             {currentView === 'super-admin' && <SuperAdminDashboard />}
@@ -65,7 +64,6 @@ const MainLayout: React.FC = () => {
             {currentView === 'vault' && <FirmVaultView />}
             {currentView === 'billing' && <BillingCenterView />}
             {currentView === 'trust' && <TrustAccountingView />}
-            {(currentView === 'portal' || currentView === 'client-portal') && <ClientPortalView />}
 
             {/* Global Search Dialog (⌘K) */}
             <GlobalSearchModal />

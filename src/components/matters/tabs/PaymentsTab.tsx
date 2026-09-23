@@ -273,7 +273,7 @@ export const PaymentsTab: React.FC<Props> = ({ matter }) => {
                 >
                   {unpaidInvoices.map((inv) => (
                     <option key={inv.id} value={inv.id}>
-                      {inv.invoiceNumber} (Balance Due: {formatCurrency(inv.balanceDue)})
+                      {inv.invoiceNumber} (Balance Due: {formatINR(inv.balanceDue)})
                     </option>
                   ))}
                 </select>

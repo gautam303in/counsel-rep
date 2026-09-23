@@ -184,12 +184,85 @@ export interface MatterTask {
   priority: 'High' | 'Medium' | 'Low';
 }
 
+export interface DocumentSummaryResult {
+  executiveOverview: string;
+  keyProvisionsOrClaims: string[];
+  criticalRisksOrObligations: string[];
+  evidentiaryImpact: string;
+  recommendedAction: string;
+  keyEntities: string[];
+  governingLawOrJurisdiction?: string;
+  rawSummaryText: string;
+  source: 'gemini-3.8-flash' | 'legal-rule-engine';
+  generatedAt: string;
+  // Convenience aliases for UI consumption
+  keyProvisions?: string[];
+  criticalRisks?: string[];
+  evidentiaryValue?: string;
+  actionPlan?: string;
+  identifiedEntities?: string[];
+  governingLaw?: string;
+}
+
 export interface DocumentVersion {
   versionNumber: string;
   uploadedAt: string;
   uploadedBy: string;
   fileSize: string;
   notes?: string;
+  fileName?: string;
+  snapshotContent?: string;
+  revertedFrom?: string;
+  hash?: string;
+}
+
+export interface EncryptedFolderRecord {
+  folderName: string;
+  isEncrypted: boolean;
+  algorithm: 'AES-256-GCM';
+  keyFingerprint: string;
+  cipherIv: string;
+  authTag: string;
+  encryptedAt: string;
+  encryptedBy: string;
+  docCount: number;
+  status: 'ENCRYPTED' | 'DECRYPTED';
+  securityPolicy: 'CLIENT_CONFIDENTIAL' | 'RESTRICTED_ACCESS';
+}
+
+export interface FolderThumbnailSlot {
+  id: string;
+  docTitle: string;
+  fileName: string;
+  fileType: 'pdf' | 'docx' | 'xlsx' | 'txt' | 'img' | 'other';
+  ext: string;
+  fileSize?: string;
+}
+
+export interface LegalTagSuggestion {
+  tag: string;
+  confidence: number; // 0.0 to 1.0 (e.g. 0.95 = 95%)
+  category: 'Domain' | 'Procedural' | 'Privilege' | 'Clause' | 'Regulatory' | 'Evidentiary';
+  rationale: string;
+}
+
+export interface AutoTagAnalysisResult {
+  docId?: string;
+  fileName: string;
+  title: string;
+  detectedDocType: string;
+  summaryExcerpt: string;
+  suggestedTags: LegalTagSuggestion[];
+  analyzedAt: string;
+  modelUsed: string;
+}
+
+export interface FolderThumbnailPreview {
+  folderName: string;
+  itemCount: number;
+  status: 'idle' | 'generating' | 'ready';
+  generatedAt: number;
+  slots: Array<FolderThumbnailSlot | null>; // 4 slots for 2x2 grid
 }
 
 export interface VaultDocument {
@@ -210,6 +283,7 @@ export interface VaultDocument {
   tags: string[];
   confidentialityLevel: 'Public' | 'Firm Confidential' | 'Highly Confidential - Attorneys Eyes Only';
   summary?: string;
+  aiSummary?: DocumentSummaryResult;
 }
 
 export interface LegalHold {
@@ -454,7 +528,16 @@ export type AuditActionType =
   | 'DOCUMENT_MODIFIED'
   | 'DOCUMENT_UPLOADED'
   | 'DOCUMENT_DOWNLOADED_WATERMARKED'
+  | 'DOCUMENT_MOVED'
+  | 'DOCUMENT_COPIED'
+  | 'DOCUMENT_DELETED'
+  | 'DOCUMENTS_BULK_MOVED'
+  | 'DOCUMENTS_BULK_COPIED'
+  | 'DOCUMENTS_BULK_DELETED'
+  | 'DOCUMENTS_AUTO_TAGGED'
   | 'FOLDER_CREATED'
+  | 'FOLDER_ENCRYPTED'
+  | 'FOLDER_DECRYPTED'
   | 'AI_DRAFT_REQUESTED'
   | 'AI_DRAFT_COMMITTED'
   | (string & {});

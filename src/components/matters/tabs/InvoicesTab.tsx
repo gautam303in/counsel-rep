@@ -281,7 +281,7 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
                           {line.rate ? `₹${line.rate}` : '—'}
                         </td>
                         <td className="py-2 px-1 text-right font-num font-semibold text-slate-900">
-                          {formatCurrency(line.amount)}
+                          {formatINR(line.amount)}
                         </td>
                       </tr>
                     ))}
@@ -294,7 +294,7 @@ export const InvoicesTab: React.FC<Props> = ({ matter }) => {
                 <div className="w-64 space-y-1.5 text-xs">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal Professional Fees:</span>
-                    <span className="font-num">{formatCurrency(selectedInvoice.subtotalTime)}</span>
+                    <span className="font-num">{formatINR(selectedInvoice.subtotalTime)}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal Expenses & Costs:</span>

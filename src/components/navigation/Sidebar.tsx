@@ -1,26 +1,18 @@
 import React from 'react';
 import {
   Building,
-  Clock,
-  Cloud,
-  ExternalLink,
-  Globe,
-  HardDrive,
-  IndianRupee,
-  Key,
-  LogOut,
-  Monitor,
-  Moon,
-  RotateCcw,
-  Scale,
-  Shield,
+  Briefcase,
+  LayoutDashboard,
+  FolderLock,
+  Receipt,
+  Landmark,
   ShieldAlert,
+  Key,
   ShieldCheck,
-  Star,
+  Moon,
   Sun,
-  Trash2,
+  LogOut,
   UploadCloud,
-  Users,
 } from 'lucide-react';
 import { MainNavView, useApp } from '../../context/AppContext';
 
@@ -48,18 +40,18 @@ export const Sidebar: React.FC = () => {
     icon: React.ElementType;
     badge?: string | number;
   }> = [
-    { id: 'dashboard', label: 'Practice Overview', icon: Cloud },
-    { id: 'matters', label: 'My Repos & Matters', icon: HardDrive, badge: matters.length },
-    { id: 'vault', label: 'Counsel Repos Vault', icon: Clock },
-    { id: 'billing', label: 'Billing Center (₹ INR)', icon: Trash2 },
-    { id: 'trust', label: 'IOLTA Trust Ledger', icon: Star },
+    { id: 'dashboard', label: 'Practice Overview', icon: LayoutDashboard },
+    { id: 'matters', label: 'My Repos & Matters', icon: Briefcase, badge: matters.length },
+    { id: 'vault', label: 'Counsel Repos Vault', icon: FolderLock },
+    { id: 'billing', label: 'Billing Center (₹ INR)', icon: Receipt },
+    { id: 'trust', label: 'IOLTA Trust Ledger', icon: Landmark },
     {
       id: 'conflicts',
       label: 'Conflict & Screens',
-      icon: Users,
+      icon: ShieldAlert,
       badge: userScreens.length > 0 ? `${userScreens.length} Screen` : undefined,
     },
-    { id: 'admin', label: 'Portal Admin & RBAC', icon: RotateCcw },
+    { id: 'admin', label: 'Portal Admin & RBAC', icon: Key },
   ];
 
   return (
@@ -67,11 +59,11 @@ export const Sidebar: React.FC = () => {
       className={`w-64 border-r flex flex-col shrink-0 select-none z-20 relative font-sans transition-colors duration-200 ${
         isDark
           ? 'bg-[#0a1532] border-slate-800/80 text-slate-100'
-          : 'bg-[#102347] border-slate-300 text-slate-100'
+          : 'bg-[#FFFFF0] border-amber-200/70 text-slate-800'
       }`}
     >
       {/* Brand Header: Counsel Repos */}
-      <div className="p-6 pb-4">
+      <div className={`p-6 pb-4 transition-colors duration-200 ${isDark ? '' : 'bg-[#FFFFF0]'}`}>
         <div className="flex items-center gap-3">
           {/* Triangular Brand Mark */}
           <div className="w-8 h-8 flex items-center justify-center">
@@ -85,31 +77,53 @@ export const Sidebar: React.FC = () => {
             </svg>
           </div>
           <div>
-            <h1 className="font-bold text-lg tracking-tight text-white flex items-center gap-1">
+            <h1
+              className={`font-bold text-lg tracking-tight flex items-center gap-1 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               Counsel Repos
             </h1>
-            <span className="text-[10px] text-blue-400 tracking-wider font-semibold uppercase">
+            <span
+              className={`text-[10px] tracking-wider font-semibold uppercase ${
+                isDark ? 'text-blue-400' : 'text-blue-600'
+              }`}
+            >
               Legal DMS & Practice OS
             </span>
           </div>
         </div>
 
         {/* Active Firm / Tenant Subtitle */}
-        <div className="mt-3 px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-800/40 text-[11px] flex items-center justify-between">
-          <span className="truncate font-semibold text-blue-200">{currentTenant.name}</span>
-          <span className="text-[9px] font-bold text-blue-400 uppercase bg-blue-900/60 px-1.5 py-0.5 rounded">
+        <div
+          className={`mt-3 px-3 py-1.5 rounded-xl text-[11px] flex items-center justify-between border transition-colors ${
+            isDark
+              ? 'bg-blue-950/60 border-blue-800/40 text-blue-200'
+              : 'bg-[#FFFDF7] border-amber-200/80 text-slate-800 shadow-xs'
+          }`}
+        >
+          <span className={`truncate font-semibold ${isDark ? 'text-blue-200' : 'text-slate-800'}`}>
+            {currentTenant.name}
+          </span>
+          <span
+            className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+              isDark
+                ? 'text-blue-400 bg-blue-900/60'
+                : 'text-blue-700 bg-blue-100'
+            }`}
+          >
             {currentTenant.plan}
           </span>
         </div>
       </div>
 
       {/* Upload New Files Pill Button */}
-      <div className="px-6 py-2">
+      <div className={`px-6 py-2 transition-colors duration-200 ${isDark ? '' : 'bg-[#FFFFF0]'}`}>
         <button
           onClick={() => {
             setCurrentView('vault');
           }}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2.5 px-5 rounded-full shadow-lg shadow-blue-900/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-98"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2.5 px-5 rounded-full shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center justify-center gap-2 active:scale-98"
         >
           <UploadCloud className="w-4 h-4 text-white" />
           <span>Upload New Files</span>
@@ -117,22 +131,32 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Primary Navigation Links */}
-      <div className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
+      <div
+        className={`flex-1 py-3 px-3 space-y-1 overflow-y-auto transition-colors duration-200 ${
+          isDark ? '' : 'bg-[#FFFFF0]'
+        }`}
+      >
         {/* Super Admin Tab (If authorized) */}
         {currentUser.role === 'SUPER_ADMIN' && (
           <button
             onClick={() => setCurrentView('super-admin')}
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold transition-all mb-2 ${
               currentView === 'super-admin'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                : 'bg-purple-950/40 text-purple-300 hover:bg-purple-900/40 border border-purple-800/60'
+                ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+                : isDark
+                ? 'bg-purple-950/40 text-purple-300 hover:bg-purple-900/40 border border-purple-800/60'
+                : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
             }`}
           >
             <div className="flex items-center gap-3">
-              <ShieldCheck className="w-4 h-4 text-purple-400" />
+              <ShieldCheck className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
               <span>SaaS Licensing Console</span>
             </div>
-            <span className="text-[9px] bg-purple-900 text-purple-200 px-1.5 py-0.5 rounded font-bold uppercase">
+            <span
+              className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                isDark ? 'bg-purple-900 text-purple-200' : 'bg-purple-200 text-purple-800'
+              }`}
+            >
               Master
             </span>
           </button>
@@ -149,48 +173,62 @@ export const Sidebar: React.FC = () => {
               onClick={() => setCurrentView(item.id)}
               className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${
                 isActive
-                  ? 'bg-blue-600/30 text-white border border-blue-500/40 shadow-xs font-semibold'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? isDark
+                    ? 'bg-blue-600/30 text-white border border-blue-500/40 shadow-xs font-semibold'
+                    : 'bg-blue-600 text-white shadow-xs font-semibold'
+                  : isDark
+                  ? 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-[#F4F4E4]'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                <Icon
+                  className={`w-4 h-4 ${
+                    isActive
+                      ? isDark
+                        ? 'text-blue-400'
+                        : 'text-white'
+                      : isDark
+                      ? 'text-slate-400'
+                      : 'text-slate-500'
+                  }`}
+                />
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-blue-300 font-medium font-num">
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium font-num border ${
+                    isActive
+                      ? isDark
+                        ? 'bg-blue-950 text-blue-200 border-blue-400/40'
+                        : 'bg-blue-700 text-white border-blue-500'
+                      : isDark
+                      ? 'bg-slate-800/80 border-slate-700 text-blue-300'
+                      : 'bg-[#EDEDD5] border-amber-200/80 text-blue-800'
+                  }`}
+                >
                   {item.badge}
                 </span>
               )}
             </button>
           );
         })}
-
-        {/* Client Portal Mode Button */}
-        <div className="pt-2">
-          <button
-            onClick={() => setCurrentView('client-portal')}
-            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${
-              currentView === 'client-portal' || currentView === 'portal'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shadow-md'
-                : 'text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-950/20'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <Globe className="w-4 h-4 text-emerald-400" />
-              <span>Client Portal</span>
-            </div>
-            <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold px-1.5 py-0.5 rounded-full uppercase">
-              Live
-            </span>
-          </button>
-        </div>
       </div>
 
       {/* Ethical Wall Warning if screened */}
       {userScreens.length > 0 && (
-        <div className="mx-4 mb-2 p-2.5 bg-amber-950/30 border border-amber-800/40 rounded-xl text-[11px] text-amber-200 leading-tight">
-          <div className="flex items-center gap-1.5 font-semibold text-amber-400 mb-0.5">
+        <div
+          className={`mx-4 mb-2 p-2.5 rounded-xl text-[11px] leading-tight border transition-colors ${
+            isDark
+              ? 'bg-amber-950/30 border-amber-800/40 text-amber-200'
+              : 'bg-amber-50 border-amber-300 text-amber-900'
+          }`}
+        >
+          <div
+            className={`flex items-center gap-1.5 font-semibold mb-0.5 ${
+              isDark ? 'text-amber-400' : 'text-amber-800'
+            }`}
+          >
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>Ethical Screening</span>
           </div>
@@ -199,19 +237,37 @@ export const Sidebar: React.FC = () => {
       )}
 
       {/* SaaS Licensing & Quota Strip */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/70 space-y-3">
-        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 tracking-wider uppercase">
+      <div
+        className={`p-4 border-t space-y-3 transition-colors duration-200 ${
+          isDark
+            ? 'border-slate-800/80 bg-slate-950/70 text-slate-400'
+            : 'border-amber-200/70 bg-[#FFFFF0] text-slate-600'
+        }`}
+      >
+        <div
+          className={`flex items-center justify-between text-[11px] font-semibold tracking-wider uppercase ${
+            isDark ? 'text-slate-400' : 'text-slate-600'
+          }`}
+        >
           <span>Licensing & Seats</span>
-          <span className="text-blue-400 font-num font-bold">
+          <span
+            className={`font-num font-bold ${
+              isDark ? 'text-blue-400' : 'text-blue-700'
+            }`}
+          >
             {currentTenant.seatsAllocated}/{currentTenant.maxSeats}
           </span>
         </div>
 
         {/* Seat Quota Bar */}
-        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div
+          className={`w-full h-1.5 rounded-full overflow-hidden ${
+            isDark ? 'bg-slate-800' : 'bg-amber-100'
+          }`}
+        >
           <div
             className={`h-full rounded-full transition-all ${
-              currentTenant.seatsAllocated >= currentTenant.maxSeats ? 'bg-amber-500' : 'bg-blue-500'
+              currentTenant.seatsAllocated >= currentTenant.maxSeats ? 'bg-amber-500' : 'bg-blue-600'
             }`}
             style={{
               width: `${Math.min(
@@ -223,12 +279,18 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Theme & Logout Controls */}
-        <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs">
+        <div
+          className={`pt-2 border-t flex items-center justify-between text-xs ${
+            isDark ? 'border-slate-800/60' : 'border-amber-200/60'
+          }`}
+        >
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
             title={`Toggle ${isDark ? 'Light' : 'Dark'} mode`}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors"
+            className={`flex items-center gap-1.5 transition-colors ${
+              isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
             {isDark ? (
               <>
@@ -237,7 +299,7 @@ export const Sidebar: React.FC = () => {
               </>
             ) : (
               <>
-                <Moon className="w-3.5 h-3.5 text-blue-400" />
+                <Moon className="w-3.5 h-3.5 text-blue-600" />
                 <span className="text-[11px]">Dark Mode</span>
               </>
             )}
@@ -247,7 +309,9 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={logout}
             title="Log out of system"
-            className="flex items-center gap-1 text-slate-400 hover:text-rose-400 transition-colors"
+            className={`flex items-center gap-1 transition-colors ${
+              isDark ? 'text-slate-400 hover:text-rose-400' : 'text-slate-600 hover:text-rose-600'
+            }`}
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="text-[11px]">Log Out</span>

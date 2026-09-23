@@ -19,7 +19,12 @@ export type DocumentActionType =
   | 'upload'
   | 'download'
   | 'delete'
-  | 'hold';
+  | 'hold'
+  | 'DOCUMENT_VIEWED'
+  | 'DOCUMENT_MODIFIED'
+  | 'DOCUMENT_UPLOADED'
+  | 'DOCUMENT_DOWNLOADED_WATERMARKED'
+  | (string & {});
 
 export type TrustActionType =
   | 'DEPOSIT'
@@ -150,29 +155,35 @@ export function useAudit() {
       docId: string,
       docTitle: string,
       matterId?: string,
-      customDetails?: string
+      matterNumberOrDetails?: string,
+      metadata?: Record<string, any>
     ) => {
       let action: AuditActionType = 'DOCUMENT_VIEWED';
       let defaultDesc = '';
 
       switch (actionType) {
         case 'view':
+        case 'DOCUMENT_VIEWED':
           action = 'DOCUMENT_VIEWED';
           defaultDesc = `${currentUser.name} viewed document "${docTitle}".`;
           break;
         case 'modify':
+        case 'DOCUMENT_MODIFIED':
           action = 'DOCUMENT_MODIFIED';
           defaultDesc = `${currentUser.name} modified document metadata / versions for "${docTitle}".`;
           break;
         case 'upload':
+        case 'DOCUMENT_UPLOADED':
           action = 'DOCUMENT_UPLOADED';
           defaultDesc = `${currentUser.name} uploaded new file "${docTitle}" to vault.`;
           break;
         case 'download':
+        case 'DOCUMENT_DOWNLOADED_WATERMARKED':
           action = 'DOCUMENT_DOWNLOADED_WATERMARKED';
           defaultDesc = `${currentUser.name} downloaded forensic watermarked copy of "${docTitle}".`;
           break;
         case 'hold':
+        case 'LEGAL_HOLD_PRESERVATION_FROZEN':
           action = 'LEGAL_HOLD_PRESERVATION_FROZEN';
           defaultDesc = `${currentUser.name} applied litigation preservation freeze to "${docTitle}".`;
           break;
@@ -180,6 +191,21 @@ export function useAudit() {
           action = 'DOCUMENT_MODIFIED';
           defaultDesc = `${currentUser.name} archived document "${docTitle}".`;
           break;
+        default:
+          action = actionType as AuditActionType;
+          defaultDesc = `${currentUser.name} performed action on document "${docTitle}".`;
+          break;
+      }
+
+      let resolvedMatterNumber: string | undefined = undefined;
+      let resolvedDetails = defaultDesc;
+
+      if (matterNumberOrDetails) {
+        if (matterNumberOrDetails.startsWith('M-') || !matterNumberOrDetails.includes(' ')) {
+          resolvedMatterNumber = matterNumberOrDetails;
+        } else {
+          resolvedDetails = matterNumberOrDetails;
+        }
       }
 
       return logEvent({
@@ -187,10 +213,12 @@ export function useAudit() {
         entityType: 'Document',
         entityId: docId,
         matterId,
-        details: customDetails || defaultDesc,
+        matterNumber: resolvedMatterNumber,
+        details: resolvedDetails,
         metadata: {
           docTitle,
           actionType,
+          ...metadata,
         },
       });
     },

@@ -371,7 +371,7 @@ export const TrustTab: React.FC<Props> = ({ matter }) => {
               Disburse / Refund Trust Funds
             </h3>
             <p className="text-xs text-slate-400">
-              Available balance: {formatCurrency(currentBalance)}
+              Available balance: {formatINR(currentBalance)}
             </p>
 
             <form onSubmit={handleDisburse} className="space-y-3">

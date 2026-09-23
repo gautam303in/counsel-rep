@@ -31,7 +31,9 @@ export const MattersDirectory: React.FC = () => {
     addMatter,
     clients,
     users,
+    theme,
   } = useApp();
+  const isDark = theme === 'dark';
   const { logMatterView } = useAudit();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,7 +101,11 @@ export const MattersDirectory: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-950 text-slate-100 font-sans">
+    <div
+      className={`flex-1 overflow-y-auto p-6 md:p-8 space-y-6 font-sans transition-colors duration-200 ${
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#FFFFF0] text-slate-800'
+      }`}
+    >
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -357,7 +363,7 @@ export const MattersDirectory: React.FC = () => {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-num font-bold text-slate-200 focus:outline-none focus:border-blue-500"
                   />
                   <span className="text-[10px] text-slate-500 mt-1 block">
-                    Formatted: {formatCurrency(budgetCap)}
+                    Formatted: {formatINR(budgetCap)}
                   </span>
                 </div>
                 <div>
@@ -372,7 +378,7 @@ export const MattersDirectory: React.FC = () => {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-num font-bold text-slate-200 focus:outline-none focus:border-blue-500"
                   />
                   <span className="text-[10px] text-slate-500 mt-1 block">
-                    Formatted: {formatCurrency(evergreenTrustMinimum)}
+                    Formatted: {formatINR(evergreenTrustMinimum)}
                   </span>
                 </div>
               </div>

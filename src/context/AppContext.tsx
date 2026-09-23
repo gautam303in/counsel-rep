@@ -44,6 +44,7 @@ import {
   User,
   UTBMSCode,
   VaultDocument,
+  DocumentVersion,
 } from '../types';
 
 export type MainNavView =
@@ -178,7 +179,28 @@ interface AppContextType {
   ) => void;
   depositTrust: (matterId: string, amount: number, notes: string) => void;
   addTrustTransaction: (tx: Omit<TrustTransaction, 'id' | 'runningBalance'>) => void;
-  addDocument: (doc: Omit<VaultDocument, 'id' | 'createdAt' | 'currentVersion' | 'versions'>) => void;
+  addDocument: (doc: Omit<VaultDocument, 'id' | 'createdAt' | 'currentVersion' | 'versions'> | VaultDocument) => void;
+  updateDocument: (docId: string, updates: Partial<VaultDocument>) => void;
+  deleteDocument: (docId: string) => boolean;
+  deleteDocuments: (docIds: string[]) => { deletedCount: number; blockedCount: number };
+  bulkMoveDocuments: (docIds: string[], targetFolder: string) => void;
+  bulkCopyDocuments: (docIds: string[], targetFolder: string) => void;
+  addDocumentVersion: (
+    docId: string,
+    versionData: {
+      versionNumber?: string;
+      notes?: string;
+      fileSize?: string;
+      fileName?: string;
+      ocrExtractedText?: string;
+      summary?: string;
+    }
+  ) => void;
+  revertDocumentVersion: (
+    docId: string,
+    targetVersionNumber: string,
+    reason?: string
+  ) => boolean;
   toggleEthicalWall: (ruleId: string) => void;
   addEthicalWall: (rule: Omit<EthicalWallRule, 'id'>) => void;
   createLegalHold: (hold: Omit<LegalHold, 'id' | 'createdAt' | 'status' | 'tamperProofHash'>) => void;
@@ -756,8 +778,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addDocument = (
-    docData: Omit<VaultDocument, 'id' | 'createdAt' | 'currentVersion' | 'versions'>
+    docData: Omit<VaultDocument, 'id' | 'createdAt' | 'currentVersion' | 'versions'> | VaultDocument
   ) => {
+    if ('id' in docData && docData.id) {
+      setDocuments((prev) => [docData as VaultDocument, ...prev.filter((d) => d.id !== docData.id)]);
+      return;
+    }
     const newDoc: VaultDocument = {
       ...docData,
       id: 'doc-' + (documents.length + 1),
@@ -774,6 +800,273 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ],
     };
     setDocuments((prev) => [newDoc, ...prev]);
+  };
+
+  const updateDocument = (docId: string, updates: Partial<VaultDocument>) => {
+    setDocuments((prev) =>
+      prev.map((doc) => {
+        if (doc.id === docId) {
+          return { ...doc, ...updates };
+        }
+        return doc;
+      })
+    );
+  };
+
+  const deleteDocument = (docId: string): boolean => {
+    const doc = documents.find((d) => d.id === docId);
+    if (!doc) return false;
+    if (doc.isHeld) {
+      logAudit(
+        'SECURITY_ALERT',
+        'Document',
+        docId,
+        `Attempted deletion of document "${doc.title}" blocked by active Litigation Preservation Hold. Custodian: ${currentUser.name}`,
+        doc.matterId
+      );
+      return false;
+    }
+
+    setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    const m = matters.find((item) => item.id === doc.matterId);
+    logAudit(
+      'DOCUMENT_DELETED',
+      'Document',
+      doc.id,
+      `Document "${doc.title}" (${doc.fileName}) deleted from folder "${doc.folder}" by ${currentUser.name}`,
+      doc.matterId,
+      m?.matterNumber
+    );
+    return true;
+  };
+
+  const deleteDocuments = (docIds: string[]): { deletedCount: number; blockedCount: number } => {
+    const toDeleteSet = new Set(docIds);
+    let deletedCount = 0;
+    let blockedCount = 0;
+    const deletedTitles: string[] = [];
+
+    const remaining = documents.filter((doc) => {
+      if (toDeleteSet.has(doc.id)) {
+        if (doc.isHeld) {
+          blockedCount++;
+          return true; // Keep held documents
+        }
+        deletedCount++;
+        deletedTitles.push(doc.title);
+        return false; // Remove permitted documents
+      }
+      return true;
+    });
+
+    setDocuments(remaining);
+
+    if (deletedCount > 0) {
+      logAudit(
+        'DOCUMENTS_BULK_DELETED',
+        'Document',
+        'batch-purge',
+        `Bulk deleted ${deletedCount} document(s) [${deletedTitles.slice(0, 3).join(', ')}${deletedTitles.length > 3 ? '...' : ''}] by ${currentUser.name}.${blockedCount > 0 ? ` ${blockedCount} items retained due to active Litigation Hold.` : ''}`
+      );
+    }
+    if (blockedCount > 0) {
+      logAudit(
+        'SECURITY_ALERT',
+        'Document',
+        'batch-purge-hold-block',
+        `Blocked deletion of ${blockedCount} item(s) protected by mandatory legal hold during bulk purge.`
+      );
+    }
+
+    return { deletedCount, blockedCount };
+  };
+
+  const bulkMoveDocuments = (docIds: string[], targetFolder: string) => {
+    const idSet = new Set(docIds);
+    setDocuments((prev) =>
+      prev.map((doc) => {
+        if (idSet.has(doc.id)) {
+          return { ...doc, folder: targetFolder as any };
+        }
+        return doc;
+      })
+    );
+
+    logAudit(
+      'DOCUMENTS_BULK_MOVED',
+      'Document',
+      targetFolder,
+      `Moved ${docIds.length} document(s) to folder "${targetFolder}" by ${currentUser.name}`
+    );
+  };
+
+  const bulkCopyDocuments = (docIds: string[], targetFolder: string) => {
+    const idSet = new Set(docIds);
+    const copies: VaultDocument[] = [];
+
+    documents.forEach((doc) => {
+      if (idSet.has(doc.id)) {
+        const copyDoc: VaultDocument = {
+          ...doc,
+          id: `doc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          title: `${doc.title} (Copy)`,
+          folder: targetFolder as any,
+          createdAt: new Date().toISOString().split('T')[0],
+          createdBy: currentUser.name,
+          currentVersion: 'v1.0',
+          versions: [
+            {
+              versionNumber: 'v1.0',
+              uploadedAt: new Date().toISOString().split('T')[0],
+              uploadedBy: currentUser.name,
+              fileSize: doc.fileSize,
+              notes: `Duplicate copy of ${doc.title}`,
+            },
+          ],
+        };
+        copies.push(copyDoc);
+      }
+    });
+
+    if (copies.length > 0) {
+      setDocuments((prev) => [...copies, ...prev]);
+      logAudit(
+        'DOCUMENTS_BULK_COPIED',
+        'Document',
+        targetFolder,
+        `Duplicated and placed ${copies.length} document(s) into folder "${targetFolder}" by ${currentUser.name}`
+      );
+    }
+  };
+
+  const addDocumentVersion = (
+    docId: string,
+    versionData: {
+      versionNumber?: string;
+      notes?: string;
+      fileSize?: string;
+      fileName?: string;
+      ocrExtractedText?: string;
+      summary?: string;
+    }
+  ) => {
+    const doc = documents.find((d) => d.id === docId);
+    if (!doc) return;
+
+    // Calculate next version number (e.g. v1.1 -> v1.2, or v1.0 -> v1.1)
+    let nextVer = versionData.versionNumber;
+    if (!nextVer) {
+      const match = (doc.currentVersion || 'v1.0').match(/v?(\d+)\.(\d+)/);
+      if (match) {
+        const major = parseInt(match[1], 10);
+        const minor = parseInt(match[2], 10) + 1;
+        nextVer = `v${major}.${minor}`;
+      } else {
+        nextVer = `v${(doc.versions?.length || 1) + 1}.0`;
+      }
+    }
+
+    const newVersionObj: DocumentVersion = {
+      versionNumber: nextVer,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: currentUser.name,
+      fileSize: versionData.fileSize || doc.fileSize,
+      notes: versionData.notes || `Version update ${nextVer}`,
+      fileName: versionData.fileName || doc.fileName,
+      snapshotContent: versionData.ocrExtractedText || doc.ocrExtractedText,
+      hash: 'sha256:' + Math.random().toString(36).substring(2, 12),
+    };
+
+    setDocuments((prev) =>
+      prev.map((d) => {
+        if (d.id === docId) {
+          return {
+            ...d,
+            currentVersion: nextVer!,
+            fileSize: versionData.fileSize || d.fileSize,
+            fileName: versionData.fileName || d.fileName,
+            ocrExtractedText: versionData.ocrExtractedText || d.ocrExtractedText,
+            summary: versionData.summary || d.summary,
+            versions: [newVersionObj, ...(d.versions || [])],
+          };
+        }
+        return d;
+      })
+    );
+
+    const m = matters.find((item) => item.id === doc.matterId);
+    logAudit(
+      'DOCUMENT_MODIFIED',
+      'Document',
+      doc.id,
+      `New version ${nextVer} uploaded for "${doc.title}" by ${currentUser.name}. Notes: ${versionData.notes || 'None'}`,
+      doc.matterId,
+      m?.matterNumber
+    );
+  };
+
+  const revertDocumentVersion = (
+    docId: string,
+    targetVersionNumber: string,
+    reason?: string
+  ): boolean => {
+    const doc = documents.find((d) => d.id === docId);
+    if (!doc) return false;
+
+    const targetVer = doc.versions?.find((v) => v.versionNumber === targetVersionNumber);
+    if (!targetVer) return false;
+
+    // Calculate new active version (e.g. if current is v1.2, next is v2.0 or v1.3 with rollback note)
+    const match = (doc.currentVersion || 'v1.0').match(/v?(\d+)\.(\d+)/);
+    let nextVerNumber = '';
+    if (match) {
+      const major = parseInt(match[1], 10) + 1;
+      nextVerNumber = `v${major}.0`;
+    } else {
+      nextVerNumber = `v${(doc.versions?.length || 1) + 1}.0`;
+    }
+
+    const revertVersionObj: DocumentVersion = {
+      versionNumber: nextVerNumber,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: currentUser.name,
+      fileSize: targetVer.fileSize || doc.fileSize,
+      notes: reason
+        ? `Rollback to ${targetVersionNumber}: ${reason}`
+        : `Reverted to previous version ${targetVersionNumber} ("${targetVer.notes || 'Original archive'}")`,
+      revertedFrom: targetVersionNumber,
+      snapshotContent: targetVer.snapshotContent || doc.ocrExtractedText,
+      fileName: targetVer.fileName || doc.fileName,
+      hash: targetVer.hash,
+    };
+
+    setDocuments((prev) =>
+      prev.map((d) => {
+        if (d.id === docId) {
+          return {
+            ...d,
+            currentVersion: nextVerNumber,
+            fileSize: targetVer.fileSize || d.fileSize,
+            fileName: targetVer.fileName || d.fileName,
+            ocrExtractedText: targetVer.snapshotContent || d.ocrExtractedText,
+            versions: [revertVersionObj, ...(d.versions || [])],
+          };
+        }
+        return d;
+      })
+    );
+
+    const m = matters.find((item) => item.id === doc.matterId);
+    logAudit(
+      'DOCUMENT_MODIFIED',
+      'Document',
+      doc.id,
+      `Version rollback executed on "${doc.title}": reverted from ${doc.currentVersion} to ${targetVersionNumber} as ${nextVerNumber}. ${reason ? `Reason: ${reason}` : ''}`,
+      doc.matterId,
+      m?.matterNumber
+    );
+
+    return true;
   };
 
   const toggleEthicalWall = (ruleId: string) => {
@@ -1022,6 +1315,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         depositTrust,
         addTrustTransaction,
         addDocument,
+        updateDocument,
+        deleteDocument,
+        deleteDocuments,
+        bulkMoveDocuments,
+        bulkCopyDocuments,
+        addDocumentVersion,
+        revertDocumentVersion,
         toggleEthicalWall,
         addEthicalWall,
         createLegalHold,

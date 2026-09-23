@@ -8,6 +8,9 @@ import {
   Layers,
   Sparkles,
   Info,
+  ShieldCheck,
+  FileText,
+  ArrowDownCircle,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAudit } from '../../hooks/useAudit';
@@ -30,22 +33,31 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
   onUploadComplete,
   compact = false,
 }) => {
-  const { matters, activeMatterId, addDocument, currentUser } = useApp();
+  const { matters, activeMatterId, addDocument, currentUser, theme } = useApp();
   const { logDocumentAction } = useAudit();
+  const isDark = theme === 'dark';
 
   const [isDragOver, setIsDragOver] = useState(false);
+  const [draggedItemCount, setDraggedItemCount] = useState<number>(0);
   const [selectedMatterId, setSelectedMatterId] = useState<string>(
     activeMatterId || matters[0]?.id || ''
   );
   const [targetCategory, setTargetCategory] = useState<string>(
     currentFolder === 'ALL' ? 'Discovery' : currentFolder
   );
+  const [uploadSuccessNotice, setUploadSuccessNotice] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef<number>(0);
 
   const activeMatter =
-    matters.find((m) => m.id === selectedMatterId) || matters[0];
+    matters.find((m) => m.id === selectedMatterId) || matters[0] || {
+      id: 'default-matter',
+      matterNumber: 'M-2026-001',
+      title: 'General Legal Repository',
+      hasActiveHold: false,
+    };
 
   const processScannedItems = async (items: ScannedUploadItem[]) => {
     if (items.length === 0) return;
@@ -75,118 +87,133 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
 
       const ext = item.file.name.split('.').pop()?.toLowerCase();
       let fileType: VaultDocument['fileType'] = 'pdf';
-      if (ext === 'docx') fileType = 'docx';
+      if (ext === 'docx' || ext === 'doc') fileType = 'docx';
       else if (ext === 'xlsx' || ext === 'xls') fileType = 'xlsx';
       else if (ext === 'txt') fileType = 'txt';
 
       const docTitle = item.file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
 
       // Simulate progress ticks
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 100));
       if (onUploadProgress) onUploadProgress(task.id, 50);
 
-      await new Promise((r) => setTimeout(r, 150));
-      if (onUploadProgress) onUploadProgress(task.id, 90);
+      await new Promise((r) => setTimeout(r, 120));
+      if (onUploadProgress) onUploadProgress(task.id, 85);
+
+      const ocrMock =
+        fileType === 'xlsx'
+          ? `[EXCEL FINANCIAL MODEL]\nFile: ${item.file.name}\nQuantum Claim Damages Sheet\nVerified Line Items: 24\nTotal Currency Value: INR 29,24,250.00\nFormula Checks: Passed.`
+          : `[FORENSIC OCR EXTRACTION]\nDocument: ${docTitle}\nIngested into matter [${activeMatter.matterNumber}] ${activeMatter.title}.\nPreservation status: Certified immutable record.\nExtracted Entities: Parties, Claims, Evidentiary exhibits.`;
 
       // Add to context
-      addDocument({
+      const createdDoc: VaultDocument = {
+        id: `doc-${Date.now()}-${i}`,
         matterId: activeMatter.id,
-        folder: assignedFolder as any,
+        folder: assignedFolder,
         title: docTitle,
         fileName: item.file.name,
         fileType,
         fileSize: item.sizeFormatted,
+        createdAt: new Date().toISOString().split('T')[0],
         createdBy: currentUser.name,
-        isHeld: activeMatter.hasActiveHold,
-        legalHoldId: activeMatter.hasActiveHold ? 'lh-1' : undefined,
-        ocrExtractedText: `INGESTION RECORD: ${item.file.name} uploaded to ${assignedFolder} in matter ${activeMatter.matterNumber}. Forensic metadata indexed.`,
-        tags: [assignedFolder, 'Direct Intake', item.file.type || 'Document'],
-        confidentialityLevel: 'Firm Confidential',
-      });
+        isHeld: activeMatter.hasActiveHold || false,
+        ocrExtractedText: ocrMock,
+        currentVersion: '1.0',
+        tags: [assignedFolder, fileType.toUpperCase(), 'INGESTED'],
+        versions: [
+          {
+            versionNumber: '1.0',
+            uploadedAt: new Date().toISOString().split('T')[0],
+            uploadedBy: currentUser.name,
+            fileSize: item.sizeFormatted,
+            notes: 'Initial ingestion into Counsel Repos vault',
+          },
+        ],
+        confidentialityLevel: activeMatter.hasActiveHold
+          ? 'Highly Confidential - Attorneys Eyes Only'
+          : 'Firm Confidential',
+      };
 
-      // Audit event
+      addDocument(createdDoc);
+
+      // Audit log
       logDocumentAction(
         'DOCUMENT_UPLOADED',
-        task.id,
-        docTitle,
+        createdDoc.id,
+        createdDoc.title,
         activeMatter.id,
         activeMatter.matterNumber,
         {
           fileName: item.file.name,
           folder: assignedFolder,
           fileSize: item.sizeFormatted,
-          relativeHierarchy: item.relativePath,
+          custodian: currentUser.name,
         }
       );
 
       if (onUploadProgress) onUploadProgress(task.id, 100);
-      if (onUploadComplete) {
-        onUploadComplete(
-          { ...task, status: 'complete', progress: 100 },
-          {
-            id: task.id,
-            matterId: activeMatter.id,
-            folder: assignedFolder as any,
-            title: docTitle,
-            fileName: item.file.name,
-            fileType,
-            fileSize: item.sizeFormatted,
-            createdAt: new Date().toISOString().split('T')[0],
-            createdBy: currentUser.name,
-            currentVersion: '1.0',
-            versions: [],
-            isHeld: activeMatter.hasActiveHold,
-            tags: [assignedFolder],
-            confidentialityLevel: 'Firm Confidential',
-          }
-        );
-      }
+      if (onUploadComplete) onUploadComplete({ ...task, status: 'complete', progress: 100 }, createdDoc);
+    }
+
+    setUploadSuccessNotice(`Successfully ingested ${items.length} item(s) into ${targetCategory}`);
+    setTimeout(() => setUploadSuccessNotice(null), 4000);
+  };
+
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    setIsDragOver(true);
+    if (e.dataTransfer.items) {
+      setDraggedItemCount(e.dataTransfer.items.length);
     }
   };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(true);
+    e.dataTransfer.dropEffect = 'copy';
+    if (!isDragOver) setIsDragOver(true);
   };
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      setIsDragOver(false);
+      dragCounterRef.current = 0;
+      setDraggedItemCount(0);
+    }
   };
 
   const handleDrop = async (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
+    dragCounterRef.current = 0;
+    setDraggedItemCount(0);
 
-    if (e.dataTransfer) {
-      const scanned = await scanDroppedItems(e.dataTransfer, targetCategory);
-      if (scanned.length > 0) {
-        await processScannedItems(scanned);
-      }
-    }
+    const items = await scanDroppedItems(e.dataTransfer, targetCategory);
+    await processScannedItems(items);
   };
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const scanned = scanInputFiles(e.target.files, targetCategory);
-      await processScannedItems(scanned);
-      e.target.value = '';
-    }
+    if (!e.target.files || e.target.files.length === 0) return;
+    const items = scanInputFiles(e.target.files, targetCategory);
+    await processScannedItems(items);
+    e.target.value = '';
   };
 
   const handleFolderChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const scanned = scanInputFiles(e.target.files, targetCategory);
-      await processScannedItems(scanned);
-      e.target.value = '';
-    }
+    if (!e.target.files || e.target.files.length === 0) return;
+    const items = scanInputFiles(e.target.files, targetCategory);
+    await processScannedItems(items);
+    e.target.value = '';
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className="space-y-3">
       {/* Hidden file & folder inputs */}
       <input
         type="file"
@@ -195,7 +222,6 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
         multiple
         className="hidden"
       />
-      {/* Folder input with webkitdirectory */}
       <input
         type="file"
         ref={folderInputRef}
@@ -207,24 +233,43 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
         className="hidden"
       />
 
-      {/* Dropzone Container */}
+      {/* Main Drag & Drop Zone with High-Contrast Visual Feedback */}
       <div
+        onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-2xl transition-all p-6 text-center select-none ${
+        className={`relative border-2 border-dashed rounded-2xl md:rounded-3xl transition-all duration-200 select-none overflow-hidden ${
+          compact ? 'p-4' : 'p-6 md:p-8'
+        } ${
           isDragOver
-            ? 'border-blue-500 bg-blue-950/40 shadow-lg shadow-blue-500/20 scale-[1.008]'
-            : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900/80'
+            ? isDark
+              ? 'border-blue-400 bg-blue-950/70 ring-4 ring-blue-500/30 shadow-2xl shadow-blue-500/25 scale-[1.015]'
+              : 'border-blue-600 bg-blue-50 ring-4 ring-blue-500/25 shadow-xl shadow-blue-500/15 scale-[1.015]'
+            : isDark
+            ? 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900/80'
+            : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/20 shadow-xs'
         }`}
       >
-        <div className="flex flex-col items-center justify-center space-y-3">
-          {/* Animated Cloud Icon */}
+        {/* Pulsing Drag-Over Overlay Cue */}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-blue-600/10 pointer-events-none flex items-center justify-center backdrop-blur-[1px] animate-pulse">
+            <div className="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+              <ArrowDownCircle className="w-4 h-4 animate-bounce" />
+              <span>Drop items now to ingest into {targetCategory}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center justify-center space-y-3.5 text-center">
+          {/* Animated Ingestion Icon */}
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${
               isDragOver
-                ? 'bg-blue-600 text-white scale-110 shadow-lg shadow-blue-600/50 animate-bounce'
-                : 'bg-blue-950/80 border border-blue-800/60 text-blue-400 group-hover:scale-105'
+                ? 'bg-blue-600 text-white scale-110 shadow-lg shadow-blue-600/40 ring-4 ring-blue-400/30 animate-bounce'
+                : isDark
+                ? 'bg-blue-950/80 border border-blue-800/60 text-blue-400'
+                : 'bg-blue-50 border border-blue-200 text-blue-600 shadow-xs'
             }`}
           >
             {isDragOver ? (
@@ -234,25 +279,38 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
             )}
           </div>
 
-          {/* Heading and Details */}
+          {/* Heading and Action Feedback */}
           <div>
-            <h3 className="text-sm font-bold text-white tracking-wide">
+            <h3
+              className={`text-sm md:text-base font-bold tracking-tight transition-colors ${
+                isDragOver
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : isDark
+                  ? 'text-white'
+                  : 'text-slate-900'
+              }`}
+            >
               {isDragOver
-                ? 'Release to upload files and folders into Counsel Repos'
-                : 'Drag & Drop files or entire folders here to upload'}
+                ? 'Release to ingest files & folder trees into Counsel Repos'
+                : 'Drag & Drop files or complete folder directories here'}
             </h3>
-            <p className="text-xs text-slate-400 mt-1 max-w-lg mx-auto">
-              Drop individual documents or complete directory hierarchies. All contents will be
-              ingested, tagged, and indexed for search automatically.
+            <p
+              className={`text-xs mt-1 max-w-lg mx-auto leading-relaxed ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}
+            >
+              {isDragOver
+                ? 'Recursive intake active — nested directories will be mapped to folder categories automatically.'
+                : 'Supports PDF, Word, Excel, and text records. Files will be scanned, hashed, and indexed for instant search without manual tagging.'}
             </p>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons: Browse Files & Upload Entire Folder */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
             >
               <FileUp className="w-4 h-4" />
               <span>Browse Files</span>
@@ -261,40 +319,82 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
             <button
               type="button"
               onClick={() => folderInputRef.current?.click()}
-              className="flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 shadow-xs transition-all active:scale-95"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border shadow-xs transition-all active:scale-95 ${
+                isDark
+                  ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+              }`}
             >
-              <FolderUp className="w-4 h-4 text-amber-400" />
+              <FolderUp className="w-4 h-4 text-amber-500" />
               <span>Upload Entire Folder</span>
             </button>
           </div>
 
           {/* Target Matter and Category Selectors Strip */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400">
-            <div className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              <span className="text-[11px] font-medium text-slate-500 uppercase">Target Matter:</span>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs">
+            {/* Matter Selector */}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${
+                isDark
+                  ? 'bg-slate-950/80 border-slate-800 text-slate-300'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}
+            >
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wider ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                Target Matter:
+              </span>
               <select
                 value={selectedMatterId}
                 onChange={(e) => setSelectedMatterId(e.target.value)}
-                className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer"
+                className={`bg-transparent font-semibold focus:outline-none cursor-pointer text-xs ${
+                  isDark ? 'text-slate-200' : 'text-slate-800'
+                }`}
               >
                 {matters.map((m) => (
-                  <option key={m.id} value={m.id} className="bg-slate-900 text-slate-100">
+                  <option
+                    key={m.id}
+                    value={m.id}
+                    className={isDark ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-800'}
+                  >
                     [{m.matterNumber}] {m.title}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              <span className="text-[11px] font-medium text-slate-500 uppercase">Default Folder:</span>
+            {/* Folder / Category Selector */}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${
+                isDark
+                  ? 'bg-slate-950/80 border-slate-800 text-slate-300'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}
+            >
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wider ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                Default Folder:
+              </span>
               <select
                 value={targetCategory}
                 onChange={(e) => setTargetCategory(e.target.value)}
-                className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer"
+                className={`bg-transparent font-semibold focus:outline-none cursor-pointer text-xs ${
+                  isDark ? 'text-slate-200' : 'text-slate-800'
+                }`}
               >
                 {['Pleadings', 'Discovery', 'Contracts', 'Exhibits', 'Correspondence', 'Drafts'].map(
                   (cat) => (
-                    <option key={cat} value={cat} className="bg-slate-900 text-slate-100">
+                    <option
+                      key={cat}
+                      value={cat}
+                      className={isDark ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-800'}
+                    >
                       {cat}
                     </option>
                   )
@@ -302,6 +402,16 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
               </select>
             </div>
           </div>
+
+          {/* Success Notification Pill */}
+          {uploadSuccessNotice && (
+            <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{uploadSuccessNotice}</span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
