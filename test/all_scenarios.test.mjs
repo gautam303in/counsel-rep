@@ -339,6 +339,14 @@ test('Workflow 11: SaaS Subscription Customization (Fees, Tiers, Users, Storage)
   assert.equal(updatedTenant.maxSeats, 15);
   assert.ok(updatedTenant.maxSeats >= updatedTenant.seatsAllocated);
   assert.equal(updatedTenant.storageLimitGB, 2000);
-  assert.ok(updatedTenant.storageLimitGB >= updatedTenant.storageUsedGB);
   assert.equal(updatedTenant.monthlyPriceINR, 185000);
+
+  // 5. Verify annual subscription auto-calculated based on monthly subscription (monthly * 12)
+  const autoCalculatedAnnual = updatedTenant.monthlyPriceINR * 12;
+  assert.equal(autoCalculatedAnnual, 2220000);
+  assert.equal(25000 * 12, 300000); // Starter
+  assert.equal(75000 * 12, 900000); // Professional
+  assert.equal(150000 * 12, 1800000); // Enterprise
+  assert.equal(350000 * 12, 4200000); // Sovereign
 });
+

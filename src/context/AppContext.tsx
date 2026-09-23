@@ -420,7 +420,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateLicensePlan = (tier: LicenseTier, updates: Partial<LicensePlanDetails>) => {
     setLicensePlans((prev) =>
-      prev.map((p) => (p.tier === tier ? { ...p, ...updates } : p))
+      prev.map((p) => {
+        if (p.tier !== tier) return p;
+        const updated = { ...p, ...updates };
+        // Annual subscription is calculated directly based on monthly subscription (monthly * 12)
+        if (updates.monthlyPriceINR !== undefined) {
+          updated.annualPriceINR = updates.monthlyPriceINR * 12;
+        }
+        return updated;
+      })
     );
   };
 

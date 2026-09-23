@@ -398,7 +398,10 @@ export const SuperAdminDashboard: React.FC = () => {
                   </div>
                   <button
                     onClick={() => {
-                      setEditingPlan(plan);
+                      setEditingPlan({
+                        ...plan,
+                        annualPriceINR: plan.monthlyPriceINR * 12,
+                      });
                       setShowPlanEditModal(true);
                     }}
                     title="Configure this tier's fees, users, and storage"
@@ -412,36 +415,40 @@ export const SuperAdminDashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <h3
                       className={`text-base font-bold ${
-                        isDark ? 'text-white' : 'text-slate-900'
+                        isDark ? 'text-white' : 'text-black'
                       }`}
                     >
                       {plan.name}
                     </h3>
-                    <span className="text-[11px] font-num text-slate-400 font-semibold">
+                    <span className={`text-[11px] font-num font-semibold ${isDark ? 'text-slate-400' : 'text-black'}`}>
                       {plan.maxSeatsIncluded} Seats
                     </span>
                   </div>
-                  <div className="text-lg font-bold font-num text-emerald-400">
+                  <div className={`text-lg font-bold font-num ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                     {formatCurrency(plan.monthlyPriceINR)}
-                    <span className="text-[11px] text-slate-400 font-normal"> / mo</span>
+                    <span className={`text-[11px] font-normal ${isDark ? 'text-slate-400' : 'text-slate-700'}`}> / mo</span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-800'}`}>
                     {plan.description}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-800/80 mt-3 text-[11px] text-slate-400 space-y-1">
+              <div className={`pt-3 border-t mt-3 text-[11px] space-y-1.5 ${
+                isDark
+                  ? 'border-slate-800/80 text-slate-400'
+                  : 'border-slate-300 text-black'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <span>Storage:</span>
-                  <span className="font-semibold text-slate-200 font-num">
+                  <span className={`font-medium ${isDark ? 'text-slate-400' : 'text-black'}`}>Storage:</span>
+                  <span className={`font-bold font-num ${isDark ? 'text-slate-200' : 'text-black'}`}>
                     {plan.storageGB} GB
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Annual Billing:</span>
-                  <span className="font-semibold text-slate-200 font-num">
-                    {formatCurrency(plan.annualPriceINR)}/yr
+                  <span className={`font-medium ${isDark ? 'text-slate-400' : 'text-black'}`}>Annual Billing:</span>
+                  <span className={`font-bold font-num ${isDark ? 'text-slate-200' : 'text-black'}`}>
+                    {formatCurrency(plan.monthlyPriceINR * 12)}/yr
                   </span>
                 </div>
               </div>
@@ -557,7 +564,7 @@ export const SuperAdminDashboard: React.FC = () => {
                             {t.name.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-100 flex items-center gap-1.5">
+                            <div className={`font-semibold flex items-center gap-1.5 ${isDark ? 'text-slate-100' : 'text-black'}`}>
                               <span>{t.name}</span>
                               {isCurrentActiveTenant && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold border border-blue-500/40">
@@ -565,7 +572,7 @@ export const SuperAdminDashboard: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-slate-400 font-mono">
+                            <div className={`text-[11px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>
                               {t.domain} · {t.adminEmail}
                             </div>
                           </div>
@@ -582,7 +589,9 @@ export const SuperAdminDashboard: React.FC = () => {
                               ? 'bg-blue-950/80 text-blue-300 border-blue-800/60'
                               : t.plan === 'PROFESSIONAL'
                               ? 'bg-sky-950/80 text-sky-300 border-sky-800/60'
-                              : 'bg-slate-800 text-slate-300 border-slate-700'
+                              : isDark
+                              ? 'bg-slate-800 text-slate-300 border-slate-700'
+                              : 'bg-slate-100 text-black border-slate-300'
                           }`}
                         >
                           {t.plan}
@@ -592,12 +601,12 @@ export const SuperAdminDashboard: React.FC = () => {
                       {/* Seats Allocated / Max */}
                       <td className="py-3.5 px-4">
                         <div>
-                          <span className="font-num font-bold text-slate-200">
+                          <span className={`font-num font-bold ${isDark ? 'text-slate-200' : 'text-black'}`}>
                             {t.seatsAllocated}
                           </span>
-                          <span className="text-slate-400 font-num"> / {t.maxSeats} seats</span>
+                          <span className={`font-num ${isDark ? 'text-slate-400' : 'text-slate-700'}`}> / {t.maxSeats} seats</span>
                         </div>
-                        <div className="w-24 bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div className={`w-24 h-1.5 rounded-full overflow-hidden mt-1 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`}>
                           <div
                             className={`h-full rounded-full ${
                               t.seatsAllocated >= t.maxSeats ? 'bg-amber-500' : 'bg-blue-500'
@@ -615,12 +624,12 @@ export const SuperAdminDashboard: React.FC = () => {
                       {/* Storage Quota */}
                       <td className="py-3.5 px-4">
                         <div>
-                          <span className="font-num font-bold text-slate-200">
+                          <span className={`font-num font-bold ${isDark ? 'text-slate-200' : 'text-black'}`}>
                             {t.storageUsedGB}
                           </span>
-                          <span className="text-slate-400 font-num"> / {t.storageLimitGB} GB</span>
+                          <span className={`font-num ${isDark ? 'text-slate-400' : 'text-slate-700'}`}> / {t.storageLimitGB} GB</span>
                         </div>
-                        <div className="w-24 bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div className={`w-24 h-1.5 rounded-full overflow-hidden mt-1 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`}>
                           <div
                             className={`h-full rounded-full transition-all ${
                               (t.storageUsedGB / t.storageLimitGB) >= 0.85
@@ -640,7 +649,11 @@ export const SuperAdminDashboard: React.FC = () => {
                       {/* License Key */}
                       <td className="py-3.5 px-4 font-mono text-[11px]">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-slate-300 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                          <span className={`px-2 py-1 rounded border font-semibold ${
+                            isDark
+                              ? 'text-slate-300 bg-slate-950 border-slate-800'
+                              : 'text-black bg-slate-100 border-slate-300'
+                          }`}>
                             {t.licenseKey}
                           </span>
                           <button
@@ -803,7 +816,7 @@ export const SuperAdminDashboard: React.FC = () => {
                     }`}
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
-                    Active Rate: {formatCurrency(selectedTenant.monthlyPriceINR)} / mo
+                    Active Rate: {formatCurrency(selectedTenant.monthlyPriceINR)} / mo (Annual: {formatCurrency(selectedTenant.monthlyPriceINR * 12)} / yr)
                   </span>
                 </div>
               </div>
@@ -1078,7 +1091,7 @@ export const SuperAdminDashboard: React.FC = () => {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none focus:border-blue-500"
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
-                    Formatted: {formatCurrency(newMonthlyPriceINR)} / month
+                    Formatted: {formatCurrency(newMonthlyPriceINR)} / month (Annual: {formatCurrency(newMonthlyPriceINR * 12)} / year)
                   </span>
                 </div>
                 <div>
@@ -1156,7 +1169,10 @@ export const SuperAdminDashboard: React.FC = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                updateLicensePlan(editingPlan.tier, editingPlan);
+                updateLicensePlan(editingPlan.tier, {
+                  ...editingPlan,
+                  annualPriceINR: editingPlan.monthlyPriceINR * 12,
+                });
                 setShowPlanEditModal(false);
               }}
               className="p-6 space-y-4 max-h-[75vh] overflow-y-auto"
@@ -1195,7 +1211,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-black'}`}>
                     Monthly Subscription Fee (₹ INR)
                   </label>
                   <input
@@ -1203,52 +1219,56 @@ export const SuperAdminDashboard: React.FC = () => {
                     min="0"
                     step="5000"
                     value={editingPlan.monthlyPriceINR}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const monthly = parseFloat(e.target.value) || 0;
+                      // Auto-calculate annual subscription based on monthly subscription: monthly * 12
+                      const annual = monthly * 12;
                       setEditingPlan({
                         ...editingPlan,
-                        monthlyPriceINR: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none border ${
+                        monthlyPriceINR: monthly,
+                        annualPriceINR: annual,
+                      });
+                    }}
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
                       isDark
-                        ? 'bg-slate-950 border-slate-800'
-                        : 'bg-slate-50 border-slate-200'
+                        ? 'bg-slate-950 border-slate-800 text-emerald-400'
+                        : 'bg-white border-slate-300 text-black'
                     }`}
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
+                  <span className={`text-[10px] mt-1 block font-medium ${isDark ? 'text-slate-400' : 'text-slate-800'}`}>
                     Formatted: {formatCurrency(editingPlan.monthlyPriceINR)} / mo
                   </span>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Annual Subscription Fee (₹ INR)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className={`block text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-black'}`}>
+                      Annual Subscription Fee (₹ INR)
+                    </label>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      Auto-Calculated (12 × Monthly)
+                    </span>
+                  </div>
                   <input
                     type="number"
                     min="0"
                     step="10000"
-                    value={editingPlan.annualPriceINR}
-                    onChange={(e) =>
-                      setEditingPlan({
-                        ...editingPlan,
-                        annualPriceINR: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold text-emerald-400 focus:outline-none border ${
+                    readOnly
+                    value={editingPlan.monthlyPriceINR * 12}
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border cursor-not-allowed opacity-90 ${
                       isDark
-                        ? 'bg-slate-950 border-slate-800'
-                        : 'bg-slate-50 border-slate-200'
+                        ? 'bg-slate-950 border-slate-800 text-emerald-400'
+                        : 'bg-slate-100 border-slate-300 text-black'
                     }`}
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    Formatted: {formatCurrency(editingPlan.annualPriceINR)} / yr
+                  <span className={`text-[10px] mt-1 block font-medium ${isDark ? 'text-slate-400' : 'text-slate-800'}`}>
+                    Formatted: {formatCurrency(editingPlan.monthlyPriceINR * 12)} / yr (12 × {formatCurrency(editingPlan.monthlyPriceINR)}/mo)
                   </span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-black'}`}>
                     Base User Seats Included
                   </label>
                   <input
@@ -1264,12 +1284,12 @@ export const SuperAdminDashboard: React.FC = () => {
                     className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
                       isDark
                         ? 'bg-slate-950 border-slate-800 text-slate-200'
-                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                        : 'bg-white border-slate-300 text-black'
                     }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-black'}`}>
                     Base Storage Included (GB)
                   </label>
                   <input
@@ -1286,14 +1306,14 @@ export const SuperAdminDashboard: React.FC = () => {
                     className={`w-full rounded-xl px-3 py-2 text-xs font-num font-bold focus:outline-none border ${
                       isDark
                         ? 'bg-slate-950 border-slate-800 text-slate-200'
-                        : 'bg-slate-50 border-slate-200 text-slate-800'
+                        : 'bg-white border-slate-300 text-black'
                     }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-black'}`}>
                   Plan Description & Value Proposition
                 </label>
                 <textarea
@@ -1305,16 +1325,16 @@ export const SuperAdminDashboard: React.FC = () => {
                   className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none border ${
                     isDark
                       ? 'bg-slate-950 border-slate-800 text-slate-200'
-                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                      : 'bg-white border-slate-300 text-black'
                   }`}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
                 <button
                   type="button"
                   onClick={() => setShowPlanEditModal(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white cursor-pointer"
+                  className={`px-4 py-2 text-xs cursor-pointer ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-black font-semibold'}`}
                 >
                   Cancel
                 </button>

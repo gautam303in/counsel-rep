@@ -123,7 +123,7 @@ export const LICENSE_PLANS: LicensePlanDetails[] = [
     tier: 'STARTER',
     name: 'Starter Practice',
     monthlyPriceINR: 25000,
-    annualPriceINR: 270000,
+    annualPriceINR: 300000, // 25,000 * 12
     maxSeatsIncluded: 3,
     storageGB: 100,
     description: 'Essential matter docketing, Indian Rupee WIP ledger, and time capture for boutique advocates.',
@@ -132,7 +132,7 @@ export const LICENSE_PLANS: LicensePlanDetails[] = [
     tier: 'PROFESSIONAL',
     name: 'Professional Firm',
     monthlyPriceINR: 75000,
-    annualPriceINR: 810000,
+    annualPriceINR: 900000, // 75,000 * 12
     maxSeatsIncluded: 5,
     storageGB: 500,
     description: 'Complete IOLTA trust escrow accounting, forensic OCR search, and client portal for growing partnerships.',
@@ -142,7 +142,7 @@ export const LICENSE_PLANS: LicensePlanDetails[] = [
     tier: 'ENTERPRISE',
     name: 'Enterprise Legal OS',
     monthlyPriceINR: 150000,
-    annualPriceINR: 1620000,
+    annualPriceINR: 1800000, // 150,000 * 12
     maxSeatsIncluded: 10,
     storageGB: 1000,
     description: 'ABA 1.10 ethical screening walls, FRCP legal hold preservation, dual-key release, and custom domain.',
@@ -151,7 +151,7 @@ export const LICENSE_PLANS: LicensePlanDetails[] = [
     tier: 'SOVEREIGN',
     name: 'Sovereign Chambers',
     monthlyPriceINR: 350000,
-    annualPriceINR: 3780000,
+    annualPriceINR: 4200000, // 350,000 * 12
     maxSeatsIncluded: 25,
     storageGB: 5000,
     description: 'Unlimited matters, multi-office partitioning, high-frequency audit indexing, and dedicated SLA support.',

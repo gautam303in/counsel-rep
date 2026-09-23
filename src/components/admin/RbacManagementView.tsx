@@ -287,6 +287,9 @@ export const RbacManagementView: React.FC = () => {
               <span className="text-emerald-400 font-num font-semibold text-xs">
                 {formatCurrency(currentTenant.monthlyPriceINR)} / mo
               </span>
+              <span className="text-slate-400 font-num text-[11px]">
+                ({formatCurrency(currentTenant.monthlyPriceINR * 12)} / yr)
+              </span>
               <span className="text-emerald-400 text-[10px] bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/60 font-semibold">
                 ACTIVE
               </span>
@@ -1064,6 +1067,9 @@ export const RbacManagementView: React.FC = () => {
                           <div className="font-num font-semibold text-emerald-400">
                             {formatCurrency(p.monthlyPriceINR)}/mo
                           </div>
+                          <div className="font-num text-[9px] text-slate-400">
+                            {formatCurrency(p.monthlyPriceINR * 12)}/yr
+                          </div>
                           <div className="text-slate-400">
                             {p.maxSeatsIncluded} seats · {p.storageGB} GB
                           </div>
@@ -1191,11 +1197,19 @@ export const RbacManagementView: React.FC = () => {
                             </span>
                           </div>
                         )}
-                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-sm font-bold mt-2">
-                          <span className="text-white">Total Monthly Subscription</span>
-                          <span className="font-num text-emerald-400">
-                            {formatCurrency(totalMonthlyCalculated)} / month
-                          </span>
+                        <div className="pt-2 border-t border-slate-800 space-y-1 mt-2">
+                          <div className="flex items-center justify-between text-sm font-bold">
+                            <span className="text-white">Total Monthly Subscription</span>
+                            <span className="font-num text-emerald-400">
+                              {formatCurrency(totalMonthlyCalculated)} / month
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs font-semibold">
+                            <span className="text-slate-400">Annual Subscription (12 × Monthly)</span>
+                            <span className="font-num text-emerald-400">
+                              {formatCurrency(totalMonthlyCalculated * 12)} / year
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
