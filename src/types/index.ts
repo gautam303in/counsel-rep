@@ -265,13 +265,30 @@ export interface FolderThumbnailPreview {
   slots: Array<FolderThumbnailSlot | null>; // 4 slots for 2x2 grid
 }
 
+/**
+ * Storage / ingestion origin for a document added to the vault.
+ * Supported intake channels: local drive, Google Drive, OneDrive, Box,
+ * network drives (NAS/SMB), scanners/capture devices, direct drag-and-drop
+ * upload, manual metadata entry, and AI-generated drafts.
+ */
+export type DocumentSource =
+  | 'local-upload'
+  | 'drag-drop'
+  | 'gdrive'
+  | 'onedrive'
+  | 'box'
+  | 'network-drive'
+  | 'scanner'
+  | 'manual-entry'
+  | 'ai-draft';
+
 export interface VaultDocument {
   id: string;
   matterId: string;
   folder: 'Pleadings' | 'Discovery' | 'Correspondence' | 'Contracts' | 'Exhibits' | 'Drafts' | (string & {});
   title: string;
   fileName: string;
-  fileType: 'pdf' | 'docx' | 'xlsx' | 'txt';
+  fileType: 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'img' | 'txt' | 'other';
   fileSize: string;
   createdAt: string;
   createdBy: string;
@@ -284,6 +301,10 @@ export interface VaultDocument {
   confidentialityLevel: 'Public' | 'Firm Confidential' | 'Highly Confidential - Attorneys Eyes Only';
   summary?: string;
   aiSummary?: DocumentSummaryResult;
+  /** Ingestion channel used to add this document (defaults to 'local-upload'). */
+  source?: DocumentSource;
+  /** SHA-256 integrity hash recorded at ingestion for chain-of-custody verification. */
+  contentHash?: string;
 }
 
 export interface LegalHold {

@@ -11,12 +11,27 @@ import {
   ShieldCheck,
   FileText,
   ArrowDownCircle,
+  HardDrive,
+  Cloud,
+  CloudUpload,
+  Box as BoxIcon,
+  Server,
+  ScanLine,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAudit } from '../../hooks/useAudit';
-import { scanDroppedItems, scanInputFiles, ScannedUploadItem } from '../../utils/fileUpload';
+import { scanDroppedItems, scanInputFiles, ScannedUploadItem, formatFileSize } from '../../utils/fileUpload';
 import { UploadTask } from './UploadProgressDrawer';
-import { VaultDocument } from '../../types';
+import { VaultDocument, DocumentSource } from '../../types';
+import {
+  buildVaultDocument,
+  IntakeItem,
+  STORAGE_CHANNELS,
+  getRemoteCatalog,
+  remoteEntriesToIntakeItems,
+} from '../../services/storageIntakeService';
 
 interface VaultDropzoneProps {
   currentFolder?: string;
@@ -73,7 +88,7 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
       hasActiveHold: false,
     };
 
-  const processScannedItems = async (items: ScannedUploadItem[]) => {
+  const processScannedItems = async (items: ScannedUploadItem[], source: DocumentSource = 'drag-drop') => {
     if (items.length === 0) return;
 
     // Create initial upload tasks
@@ -90,63 +105,36 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
       onUploadStart(newTasks);
     }
 
-    // Process each upload with simulated asynchronous progress
+    // Process each upload through the unified storage intake pipeline
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const task = newTasks[i];
-      const assignedFolder =
-        item.folderName && item.folderName !== 'Root'
-          ? item.folderName
-          : targetCategory;
 
-      const ext = item.file.name.split('.').pop()?.toLowerCase();
-      let fileType: VaultDocument['fileType'] = 'pdf';
-      if (ext === 'docx' || ext === 'doc') fileType = 'docx';
-      else if (ext === 'xlsx' || ext === 'xls') fileType = 'xlsx';
-      else if (ext === 'txt') fileType = 'txt';
-
-      const docTitle = item.file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
-
-      // Simulate progress ticks
       await new Promise((r) => setTimeout(r, 100));
       if (onUploadProgress) onUploadProgress(task.id, 50);
 
       await new Promise((r) => setTimeout(r, 120));
       if (onUploadProgress) onUploadProgress(task.id, 85);
 
-      const ocrMock =
-        fileType === 'xlsx'
-          ? `[EXCEL FINANCIAL MODEL]\nFile: ${item.file.name}\nQuantum Claim Damages Sheet\nVerified Line Items: 24\nTotal Currency Value: INR 29,24,250.00\nFormula Checks: Passed.`
-          : `[FORENSIC OCR EXTRACTION]\nDocument: ${docTitle}\nIngested into matter [${activeMatter.matterNumber}] ${activeMatter.title}.\nPreservation status: Certified immutable record.\nExtracted Entities: Parties, Claims, Evidentiary exhibits.`;
-
-      // Add to context
-      const createdDoc: VaultDocument = {
-        id: `doc-${Date.now()}-${i}`,
-        matterId: activeMatter.id,
-        folder: assignedFolder,
-        title: docTitle,
-        fileName: item.file.name,
-        fileType,
-        fileSize: item.sizeFormatted,
-        createdAt: new Date().toISOString().split('T')[0],
-        createdBy: currentUser.name,
-        isHeld: activeMatter.hasActiveHold || false,
-        ocrExtractedText: ocrMock,
-        currentVersion: '1.0',
-        tags: [assignedFolder, fileType.toUpperCase(), 'INGESTED'],
-        versions: [
-          {
-            versionNumber: '1.0',
-            uploadedAt: new Date().toISOString().split('T')[0],
-            uploadedBy: currentUser.name,
-            fileSize: item.sizeFormatted,
-            notes: 'Initial ingestion into Counsel Repos vault',
-          },
-        ],
-        confidentialityLevel: activeMatter.hasActiveHold
-          ? 'Highly Confidential - Attorneys Eyes Only'
-          : 'Firm Confidential',
+      const intakeItem: IntakeItem = {
+        name: item.file.name,
+        folderName: item.folderName,
+        relativePath: item.relativePath,
+        sizeBytes: item.file.size,
+        sizeFormatted: item.sizeFormatted,
+        mimeType: item.file.type,
+        source,
+        file: item.file,
       };
+
+      const createdDoc: VaultDocument = await buildVaultDocument(intakeItem, {
+        matterId: activeMatter.id,
+        matterNumber: activeMatter.matterNumber,
+        matterTitle: activeMatter.title,
+        hasActiveHold: !!activeMatter.hasActiveHold,
+        uploadedBy: currentUser.name,
+        defaultFolder: targetCategory,
+      });
 
       addDocument(createdDoc);
 
@@ -159,9 +147,11 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
         activeMatter.matterNumber,
         {
           fileName: item.file.name,
-          folder: assignedFolder,
+          folder: createdDoc.folder,
           fileSize: item.sizeFormatted,
           custodian: currentUser.name,
+          ingestionChannel: source,
+          contentHash: createdDoc.contentHash,
         }
       );
 
@@ -209,20 +199,20 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
     setDraggedItemCount(0);
 
     const items = await scanDroppedItems(e.dataTransfer, targetCategory);
-    await processScannedItems(items);
+    await processScannedItems(items, 'drag-drop');
   };
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const items = scanInputFiles(e.target.files, targetCategory);
-    await processScannedItems(items);
+    await processScannedItems(items, 'local-upload');
     e.target.value = '';
   };
 
   const handleFolderChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const items = scanInputFiles(e.target.files, targetCategory);
-    await processScannedItems(items);
+    await processScannedItems(items, 'local-upload');
     e.target.value = '';
   };
 
@@ -428,6 +418,229 @@ export const VaultDropzone: React.FC<VaultDropzoneProps> = ({
           )}
         </div>
       </div>
+
+      {/* Storage Source Intake Channels: Google Drive, OneDrive, Box, Network Drive, Scanner */}
+      {!compact && (
+        <StorageSourceStrip
+          targetCategory={targetCategory}
+          activeMatter={{
+            id: activeMatter.id,
+            matterNumber: activeMatter.matterNumber,
+            title: activeMatter.title,
+            hasActiveHold: !!activeMatter.hasActiveHold,
+          }}
+          onIntake={() => undefined}
+        />
+      )}
+    </div>
+  );
+};
+
+interface StorageSourceStripProps {
+  targetCategory: string;
+  activeMatter: { id: string; matterNumber: string; title: string; hasActiveHold: boolean };
+  onIntake: (items: IntakeItem[]) => void;
+}
+
+const CHANNEL_ICONS: Record<string, React.ElementType> = {
+  'hard-drive': HardDrive,
+  cloud: Cloud,
+  'cloud-blue': CloudUpload,
+  box: BoxIcon,
+  server: Server,
+  'scan-line': ScanLine,
+};
+
+const StorageSourceStrip: React.FC<StorageSourceStripProps> = ({
+  targetCategory,
+  activeMatter,
+  onIntake,
+}) => {
+  const { currentUser, addDocument, theme } = useApp();
+  const { logDocumentAction } = useAudit();
+  const isDark = theme === 'dark';
+  const [activeChannel, setActiveChannel] = useState<DocumentSource | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [connecting, setConnecting] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const catalog = activeChannel ? getRemoteCatalog(activeChannel) : [];
+
+  const toggleEntry = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleImport = async () => {
+    if (!activeChannel || selectedIds.size === 0) return;
+    setConnecting(true);
+    const entries = catalog.filter((e) => selectedIds.has(e.id));
+    const items = remoteEntriesToIntakeItems(activeChannel, entries, targetCategory);
+
+    // Simulated connector fetch latency with per-item hashing & indexing
+    await new Promise((r) => setTimeout(r, 450));
+
+    for (let i = 0; i < items.length; i++) {
+      const doc = await buildVaultDocument(items[i], {
+        matterId: activeMatter.id,
+        matterNumber: activeMatter.matterNumber,
+        matterTitle: activeMatter.title,
+        hasActiveHold: activeMatter.hasActiveHold,
+        uploadedBy: currentUser.name,
+        defaultFolder: targetCategory,
+      });
+      addDocument(doc);
+      logDocumentAction(
+        'DOCUMENT_UPLOADED',
+        doc.id,
+        doc.title,
+        activeMatter.id,
+        activeMatter.matterNumber,
+        {
+          fileName: doc.fileName,
+          folder: doc.folder,
+          fileSize: doc.fileSize,
+          custodian: currentUser.name,
+          ingestionChannel: activeChannel,
+          contentHash: doc.contentHash,
+          remoteRef: items[i].remoteRef,
+        }
+      );
+    }
+
+    setConnecting(false);
+    setSelectedIds(new Set());
+    const label = STORAGE_CHANNELS.find((c) => c.id === activeChannel)?.label || 'Connector';
+    setNotice(`Imported ${items.length} item(s) from ${label} into ${targetCategory}.`);
+    onIntake([]); // no-op local queue; keeps parent task drawer in sync without duplicates
+    setTimeout(() => setNotice(null), 5000);
+  };
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 space-y-3 ${
+        isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h4
+          className={`text-[11px] font-bold uppercase tracking-wider ${
+            isDark ? 'text-slate-400' : 'text-slate-500'
+          }`}
+        >
+          Import from Connected Storage & Capture Devices
+        </h4>
+        {notice && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {notice}
+          </span>
+        )}
+      </div>
+
+      {/* Channel Buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        {STORAGE_CHANNELS.filter((c) => c.id !== 'local-upload').map((ch) => {
+          const Icon = CHANNEL_ICONS[ch.icon] || Cloud;
+          const isActive = activeChannel === ch.id;
+          return (
+            <button
+              key={ch.id}
+              type="button"
+              onClick={() => {
+                setActiveChannel(isActive ? null : ch.id);
+                setSelectedIds(new Set());
+              }}
+              title={ch.description}
+              className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-[11px] font-semibold transition-all active:scale-95 ${
+                isActive
+                  ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-600/30'
+                  : isDark
+                    ? 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50/40'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-center leading-tight">{ch.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Connector File Browser */}
+      {activeChannel && (
+        <div
+          className={`rounded-xl border overflow-hidden ${
+            isDark ? 'border-slate-800 bg-slate-950/70' : 'border-slate-200 bg-slate-50/70'
+          }`}
+        >
+          <div
+            className={`px-3 py-2 flex items-center justify-between border-b text-[11px] font-semibold ${
+              isDark ? 'border-slate-800 text-slate-300' : 'border-slate-200 text-slate-600'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              OAuth connector session active —{' '}
+              {STORAGE_CHANNELS.find((c) => c.id === activeChannel)?.label}
+            </span>
+            <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
+              {selectedIds.size}/{catalog.length} selected
+            </span>
+          </div>
+
+          <ul className="max-h-48 overflow-y-auto divide-y divide-slate-200/60 dark:divide-slate-800/60">
+            {catalog.map((entry) => {
+              const checked = selectedIds.has(entry.id);
+              return (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleEntry(entry.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-left text-xs transition-colors ${
+                      checked
+                        ? 'bg-blue-600/10 text-blue-700 dark:text-blue-300'
+                        : isDark
+                          ? 'text-slate-300 hover:bg-slate-900'
+                          : 'text-slate-700 hover:bg-white'
+                    }`}
+                  >
+                    {checked ? (
+                      <CheckSquare className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                    ) : (
+                      <Square className="w-4 h-4 shrink-0 opacity-50" />
+                    )}
+                    <FileText className="w-4 h-4 shrink-0 opacity-60" />
+                    <span className="font-semibold truncate">{entry.name}</span>
+                    <span className={`ml-auto shrink-0 font-num text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                      {formatFileSize(entry.sizeBytes)}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className={`px-3 py-2.5 border-t flex items-center justify-end gap-2 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+            <button
+              type="button"
+              disabled={selectedIds.size === 0 || connecting}
+              onClick={handleImport}
+              className={`px-3.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all active:scale-95 ${
+                selectedIds.size === 0 || connecting
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-xs'
+              }`}
+            >
+              {connecting ? 'Fetching via connector…' : `Import ${selectedIds.size || ''} File(s) to Vault`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

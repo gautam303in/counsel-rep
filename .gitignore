@@ -1,8 +1,11 @@
+# Dependencies
 node_modules/
-build/
+
+# Build Outputs
 dist/
-coverage/
-.DS_Store
-*.log
-.env*
-!.env.example
+build/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
