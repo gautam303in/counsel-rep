@@ -35,8 +35,10 @@ function extractDocSlot(doc: VaultDocument): FolderThumbnailSlot {
   if (ext === 'pdf') normalizedType = 'pdf';
   else if (ext === 'docx' || ext === 'doc') normalizedType = 'docx';
   else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') normalizedType = 'xlsx';
-  else if (['jpg', 'jpeg', 'png', 'webp', 'svg'].includes(ext)) normalizedType = 'img';
-  else if (ext === 'txt') normalizedType = 'txt';
+  else if (['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif', 'tif', 'tiff', 'bmp'].includes(ext)) normalizedType = 'img';
+  else if (['txt', 'md', 'log', 'json'].includes(ext)) normalizedType = 'txt';
+  else if (doc.fileType === 'img') normalizedType = 'img';
+  else if (doc.fileType === 'txt') normalizedType = 'txt';
 
   return {
     id: doc.id,

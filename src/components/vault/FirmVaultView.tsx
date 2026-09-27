@@ -38,11 +38,17 @@ import {
   Trash2,
   Tag as TagIcon,
   UploadCloud,
+  Cloud,
+  Box,
+  Server,
+  ScanLine,
+  HardDrive,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAudit } from '../../hooks/useAudit';
 import { evaluateMatterAccess } from '../../services/matterPolicy';
 import { formatINR } from '../../utils/currency';
+import { describeSource } from '../../services/storageIntakeService';
 import {
   VaultDocument,
   EncryptedFolderRecord,
@@ -963,6 +969,7 @@ export const FirmVaultView: React.FC = () => {
                   </th>
                   <th className="py-3 px-5">Document Name & Tags</th>
                   <th className="py-3 px-4">Custodian / Team</th>
+                  <th className="py-3 px-4">Storage Origin</th>
                   <th className="py-3 px-4">Last Modified</th>
                   <th className="py-3 px-4">File Size</th>
                   <th className="py-3 px-6 text-right">In-Browser Inspection</th>
@@ -1102,6 +1109,27 @@ export const FirmVaultView: React.FC = () => {
                             GC
                           </div>
                         </div>
+                      </td>
+
+                      {/* Storage Origin Column */}
+                      <td className="py-3.5 px-4">
+                        <span
+                          title={`Ingestion channel: ${describeSource(doc.source).label}`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${
+                            isDark
+                              ? 'bg-indigo-950/40 text-indigo-300 border-indigo-700/50'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          }`}
+                        >
+                          {doc.source === 'scanner' && <ScanLine className="w-3 h-3" />}
+                          {(doc.source === 'gdrive' || doc.source === 'onedrive') && <Cloud className="w-3 h-3" />}
+                          {doc.source === 'box' && <Box className="w-3 h-3" />}
+                          {doc.source === 'network-drive' && <Server className="w-3 h-3" />}
+                          {(!doc.source || doc.source === 'local-upload' || doc.source === 'drag-drop') && (
+                            <HardDrive className="w-3 h-3" />
+                          )}
+                          {describeSource(doc.source).label}
+                        </span>
                       </td>
 
                       {/* Last Modified */}

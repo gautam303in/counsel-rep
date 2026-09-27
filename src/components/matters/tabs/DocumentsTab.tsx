@@ -19,8 +19,9 @@ import {
   X,
 } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
-import { Matter, VaultDocument } from '../../../types';
+import { Matter, VaultDocument, DocumentSource } from '../../../types';
 import { VaultDropzone } from '../../vault/VaultDropzone';
+import { describeSource } from '../../../services/storageIntakeService';
 
 interface Props {
   matter: Matter;
@@ -33,6 +34,16 @@ const FOLDERS: VaultDocument['folder'][] = [
   'Contracts',
   'Exhibits',
   'Drafts',
+];
+
+/** Storage channels offered in the "Add Document" intake modal. */
+const SOURCE_OPTIONS: { id: DocumentSource; label: string }[] = [
+  { id: 'local-upload', label: 'Local Drive' },
+  { id: 'gdrive', label: 'Google Drive' },
+  { id: 'onedrive', label: 'OneDrive / SharePoint' },
+  { id: 'box', label: 'Box' },
+  { id: 'network-drive', label: 'Network Drive (NAS/SMB)' },
+  { id: 'scanner', label: 'Scanner / Capture Device' },
 ];
 
 export const DocumentsTab: React.FC<Props> = ({ matter }) => {
@@ -53,6 +64,7 @@ export const DocumentsTab: React.FC<Props> = ({ matter }) => {
   const [confidentiality, setConfidentiality] = useState<VaultDocument['confidentialityLevel']>('Firm Confidential');
   const [ocrText, setOcrText] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  const [manualSource, setManualSource] = useState<DocumentSource>('local-upload');
 
   const filteredDocs = selectedFolder === 'ALL'
     ? matterDocs
@@ -66,6 +78,8 @@ export const DocumentsTab: React.FC<Props> = ({ matter }) => {
       .map((t) => t.trim())
       .filter(Boolean);
 
+    const srcLabel = describeSource(manualSource).label;
+
     addDocument({
       matterId: matter.id,
       folder,
@@ -76,9 +90,11 @@ export const DocumentsTab: React.FC<Props> = ({ matter }) => {
       createdBy: currentUser.name,
       isHeld: matter.hasActiveHold, // Invariant: New content inherits hold!
       legalHoldId: matter.hasActiveHold ? 'lh-1' : undefined,
-      ocrExtractedText: ocrText || `VERIFIED RECORD: Document ${title} indexed for full-text search.`,
+      ocrExtractedText: ocrText || `VERIFIED RECORD: Document ${title} indexed for full-text search. Source channel: ${srcLabel}.`,
       tags: tags.length > 0 ? tags : ['Vault Intake'],
       confidentialityLevel: confidentiality,
+      source: manualSource,
+      contentHash: `SHA256:${Math.random().toString(16).substring(2).toUpperCase().padEnd(8, '0').repeat(8).slice(0, 64)}`,
     });
 
     setShowUploadModal(false);
@@ -267,6 +283,23 @@ export const DocumentsTab: React.FC<Props> = ({ matter }) => {
                 <span>{doc.fileName}</span>
                 <span>{doc.fileSize}</span>
               </div>
+
+              {/* Storage / Ingestion Origin Badge */}
+              {doc.source && doc.source !== 'local-upload' && (
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                      isDark
+                        ? 'bg-indigo-950/50 text-indigo-300 border-indigo-700/50'
+                        : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                    }`}
+                    title={`Ingested via ${describeSource(doc.source).label}`}
+                  >
+                    <Share2 className="w-3 h-3" />
+                    {describeSource(doc.source).label}
+                  </span>
+                </div>
+              )}
 
               {doc.ocrExtractedText && (
                 <div
@@ -728,6 +761,30 @@ export const DocumentsTab: React.FC<Props> = ({ matter }) => {
                       {FOLDERS.map((f) => (
                         <option key={f} value={f}>
                           {f}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-[11px] font-semibold uppercase tracking-wider mb-1 ${
+                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      }`}
+                    >
+                      Storage Source
+                    </label>
+                    <select
+                      value={manualSource}
+                      onChange={(e) => setManualSource(e.target.value as DocumentSource)}
+                      className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 border ${
+                        isDark
+                          ? 'bg-slate-950 border-slate-800 text-slate-200 focus:border-blue-500'
+                          : 'bg-slate-50 border-slate-300 text-slate-900'
+                      }`}
+                    >
+                      {SOURCE_OPTIONS.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.label}
                         </option>
                       ))}
                     </select>

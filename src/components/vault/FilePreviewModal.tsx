@@ -244,6 +244,20 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         </span>
       );
     }
+    if (ext === 'pptx' || ext === 'ppt') {
+      return (
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-orange-500/10 text-orange-500 border border-orange-500/30">
+          PRESENTATION
+        </span>
+      );
+    }
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'tif', 'tiff', 'bmp', 'svg'].includes(ext)) {
+      return (
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-violet-500/10 text-violet-500 border border-violet-500/30">
+          IMAGE / SCAN
+        </span>
+      );
+    }
     return (
       <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-500/10 text-slate-500 border border-slate-500/30">
         RAW TEXT / CODE
